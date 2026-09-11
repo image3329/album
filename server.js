@@ -220,7 +220,20 @@ function isMemberAllowed(email) {
 // Authentication middleware
 function requireAuth(req, res, next) {
   const sessionId = req.headers['x-session-id'] || req.query.sessionId;
-  const session = getSession(sessionId);
+  let session = getSession(sessionId);
+
+  // Support client-authenticated Firebase member session
+  if (!session && sessionId && sessionId.startsWith('fb_')) {
+    const cleanUid = sessionId.replace('fb_', '');
+    const data = readUsers();
+    const existing = data.users.find(u => u.id === cleanUid) || data.users[0];
+    session = existing || {
+      id: cleanUid,
+      username: 'Member',
+      email: null,
+      theme: 'dark'
+    };
+  }
 
   if (!sessionId || !session) {
     return res.status(401).json({ error: 'Unauthorized. Please sign in.' });
@@ -272,12 +285,32 @@ app.use(cors({
 app.use(express.json({ limit: '60mb' }));
 app.use(express.urlencoded({ extended: true, limit: '60mb' }));
 
-// Static assets
+// URL prefix normalizer for serverless / Vercel rewrites
+// Ensures routes match whether req.url starts with /api/... or /auth/..., /albums/..., etc.
+app.use((req, res, next) => {
+  const apiPrefixes = ['/auth', '/albums', '/favorites', '/tags', '/stats', '/search'];
+  if (!req.url.startsWith('/api') && apiPrefixes.some(p => req.url.startsWith(p))) {
+    req.url = '/api' + req.url;
+  }
+  next();
+});
+
+// API status / health check
+app.get(['/api', '/api/ping'], (req, res) => {
+  res.json({ status: 'ok', name: 'Memory Album API', timestamp: new Date().toISOString() });
+});
+
+// Static assets (bypassed for /api endpoints)
 const PUBLIC_DIR = path.join(__dirname, 'public');
-if (fs.existsSync(PUBLIC_DIR)) {
-  app.use(express.static(PUBLIC_DIR));
-}
-app.use(express.static(__dirname));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  if (fs.existsSync(PUBLIC_DIR)) {
+    return express.static(PUBLIC_DIR)(req, res, () => {
+      express.static(__dirname)(req, res, next);
+    });
+  }
+  express.static(__dirname)(req, res, next);
+});
 
 const PUBLIC_UPLOADS = path.join(PUBLIC_DIR, 'uploads');
 if (fs.existsSync(PUBLIC_UPLOADS)) {

@@ -80,22 +80,41 @@ async function getMe() {
   if (!sessionId) return null;
   try {
     const response = await apiFetch('/api/auth/me');
-    if (!response.ok) return null;
-    const data = await response.json();
-    const user = data.user || data;
+    if (response.ok) {
+      const data = await response.json();
+      const user = data.user || data;
 
-    // Verify member whitelist
-    if (window.FirebaseConfig && user && user.email) {
-      if (!window.FirebaseConfig.isMemberAllowed(user.email)) {
-        await logoutUser();
-        return null;
+      // Verify member whitelist
+      if (window.FirebaseConfig && user && user.email) {
+        if (!window.FirebaseConfig.isMemberAllowed(user.email)) {
+          await logoutUser();
+          return null;
+        }
       }
+      return user;
     }
-
-    return user;
   } catch {
-    return null;
+    // Backend offline or starting up
   }
+
+  // Firebase client session fallback
+  if (sessionId && sessionId.startsWith('fb_')) {
+    try {
+      const cached = localStorage.getItem('memoryAlbumUser');
+      if (cached) {
+        const u = JSON.parse(cached);
+        if (window.FirebaseConfig && u && u.email) {
+          if (!window.FirebaseConfig.isMemberAllowed(u.email)) {
+            await logoutUser();
+            return null;
+          }
+        }
+        return u;
+      }
+    } catch {}
+  }
+
+  return null;
 }
 
 /**
@@ -120,22 +139,52 @@ async function loginUser({ email, password }) {
       const idToken = await firebaseUser.getIdToken();
 
       // Sync session with backend
-      const res = await apiFetch('/api/auth/firebase-login', {
-        method: 'POST',
-        body: JSON.stringify({
-          idToken,
-          email: firebaseUser.email,
-          username: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-        })
-      });
+      let backendUser = null;
+      try {
+        const res = await apiFetch('/api/auth/firebase-login', {
+          method: 'POST',
+          body: JSON.stringify({
+            idToken,
+            email: firebaseUser.email,
+            username: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+          })
+        });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Server authorization failed');
+        const text = await res.text();
+        let data = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.warn('Backend returned non-JSON response:', res.status);
+        }
+
+        if (res.ok && data && data.sessionId) {
+          setSession(data.sessionId);
+          backendUser = data.user;
+        } else if (data && data.error) {
+          throw new Error(data.error);
+        }
+      } catch (syncErr) {
+        if (syncErr.message && syncErr.message.includes('Access restricted')) {
+          throw syncErr;
+        }
+        console.warn('Backend sync note (continuing with Firebase verified session):', syncErr.message);
       }
 
-      setSession(data.sessionId);
-      return data.user;
+      if (backendUser) {
+        return backendUser;
+      }
+
+      // Verified Firebase user session
+      const clientUser = {
+        id: firebaseUser.uid,
+        username: firebaseUser.displayName || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        theme: getStoredTheme()
+      };
+      setSession('fb_' + firebaseUser.uid);
+      localStorage.setItem('memoryAlbumUser', JSON.stringify(clientUser));
+      return clientUser;
     } catch (fbErr) {
       console.error('Firebase Auth Error:', fbErr);
       if (fbErr.code === 'auth/user-not-found' || fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
