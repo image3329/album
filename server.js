@@ -7,26 +7,40 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Data directory & files
-const DATA_DIR = path.join(__dirname, 'data');
+// Environment & directory detection
+const isVercel = Boolean(process.env.VERCEL);
+
+// Data directory & files (use /tmp on Vercel to allow writes in serverless environment)
+const SEED_DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = isVercel ? '/tmp/data' : SEED_DATA_DIR;
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const ALBUMS_FILE = path.join(DATA_DIR, 'albums.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const SEED_UPLOADS_DIR = path.join(__dirname, 'uploads');
+const UPLOADS_DIR = isVercel ? '/tmp/uploads' : SEED_UPLOADS_DIR;
 
 // Ensure directories exist
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-// Initialize data files safely
-function initFileIfNotExists(filePath, defaultData) {
+// Initialize data files safely (copy seed data if on Vercel)
+function initFileIfNotExists(filePath, seedFileName, defaultData) {
   if (!fs.existsSync(filePath)) {
+    const seedPath = path.join(SEED_DATA_DIR, seedFileName);
+    if (fs.existsSync(seedPath)) {
+      try {
+        fs.copyFileSync(seedPath, filePath);
+        return;
+      } catch (err) {
+        console.warn(`Could not copy seed file ${seedPath}:`, err.message);
+      }
+    }
     fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), 'utf8');
   }
 }
-initFileIfNotExists(USERS_FILE, { users: [] });
-initFileIfNotExists(ALBUMS_FILE, { albums: [] });
-initFileIfNotExists(SESSIONS_FILE, { sessions: {} });
+initFileIfNotExists(USERS_FILE, 'users.json', { users: [] });
+initFileIfNotExists(ALBUMS_FILE, 'albums.json', { albums: [] });
+initFileIfNotExists(SESSIONS_FILE, 'sessions.json', { sessions: {} });
 
 // Safe atomic file writer
 function safeWriteJson(filePath, data) {
@@ -247,6 +261,26 @@ app.use(express.urlencoded({ extended: true, limit: '60mb' }));
 // Static assets
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(UPLOADS_DIR));
+if (isVercel) {
+  app.use('/uploads', express.static(SEED_UPLOADS_DIR));
+}
+
+// Explicit HTML page routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+app.get('/app.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
 
 // =======================================================
 // AUTH ROUTES
@@ -870,16 +904,20 @@ app.get('/api/search', requireAuth, (req, res) => {
   res.json({ albums: userAlbums, photos });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`Memory Album server running at http://localhost:${PORT}`);
-});
+// Start server locally (only when executed directly, not when imported as serverless function)
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`Memory Album server running at http://localhost:${PORT}`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use.`);
-  } else {
-    console.error('Server error:', err);
-  }
-  process.exit(1);
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use.`);
+    } else {
+      console.error('Server error:', err);
+    }
+    process.exit(1);
+  });
+}
+
+module.exports = app;

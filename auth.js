@@ -7,10 +7,7 @@ const THEME_KEY = 'memoryAlbumTheme';
 
 // Determine API base URL dynamically
 const API_BASE = (() => {
-  if (
-    (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
-    window.location.port === '3000'
-  ) {
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
     return '';
   }
   return 'http://localhost:3000';
