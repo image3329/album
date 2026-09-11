@@ -259,28 +259,34 @@ app.use(express.json({ limit: '60mb' }));
 app.use(express.urlencoded({ extended: true, limit: '60mb' }));
 
 // Static assets
+const PUBLIC_DIR = path.join(__dirname, 'public');
+if (fs.existsSync(PUBLIC_DIR)) {
+  app.use(express.static(PUBLIC_DIR));
+}
 app.use(express.static(__dirname));
+
+const PUBLIC_UPLOADS = path.join(PUBLIC_DIR, 'uploads');
+if (fs.existsSync(PUBLIC_UPLOADS)) {
+  app.use('/uploads', express.static(PUBLIC_UPLOADS));
+}
 app.use('/uploads', express.static(UPLOADS_DIR));
 if (isVercel) {
   app.use('/uploads', express.static(SEED_UPLOADS_DIR));
 }
 
 // Explicit HTML page routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+function sendHtml(res, filename) {
+  const publicPath = path.join(PUBLIC_DIR, filename);
+  if (fs.existsSync(publicPath)) {
+    return res.sendFile(publicPath);
+  }
+  return res.sendFile(path.join(__dirname, filename));
+}
 
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/app', (req, res) => {
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
-
-app.get('/app.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
+app.get('/', (req, res) => sendHtml(res, 'index.html'));
+app.get('/index.html', (req, res) => sendHtml(res, 'index.html'));
+app.get('/app', (req, res) => sendHtml(res, 'app.html'));
+app.get('/app.html', (req, res) => sendHtml(res, 'app.html'));
 
 // =======================================================
 // AUTH ROUTES
