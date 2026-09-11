@@ -7,12 +7,13 @@
  *    You can find these in Firebase Console > Project Settings > General > Your Apps > Web App.
  */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCXGXKpQYM0lkinbcG8xKyLnmjXFgD-si4",
+  authDomain: "album29-cc9c8.firebaseapp.com",
+  projectId: "album29-cc9c8",
+  storageBucket: "album29-cc9c8.firebasestorage.app",
+  messagingSenderId: "894089529786",
+  appId: "1:894089529786:web:ae364e16251bbb6fd33583",
+  measurementId: "G-5K0WQFZL46"
 };
 
 /**
@@ -22,12 +23,11 @@ const firebaseConfig = {
  *    Add or remove emails here as needed (in lowercase).
  */
 const ALLOWED_MEMBERS = [
-  "admin@memoryalbum.com",
-  "family@memoryalbum.com",
-  "member@memoryalbum.com",
-  "owner@example.com",
-  "test@example.com",
-  "flowtest@example.com"
+  "sahimage691@gmail.com",
+  "supriya123@gmail.com",
+  "niharika@gmail.com",
+  "rijangurung@gmail.com"
+
 ];
 
 // Determine if Firebase is configured with real credentials or still has placeholders
@@ -69,12 +69,23 @@ function isMemberAllowed(email) {
   return ALLOWED_MEMBERS.map(m => m.toLowerCase()).includes(clean);
 }
 
-// Expose configuration globally
-window.FirebaseConfig = {
-  config: firebaseConfig,
-  isConfigured: isFirebaseConfigured,
-  allowedMembers: ALLOWED_MEMBERS,
-  isMemberAllowed,
-  getApp: () => firebaseApp,
-  getAuth: () => firebaseAuth
-};
+// Expose configuration globally for browser and Node.js
+if (typeof window !== 'undefined') {
+  window.FirebaseConfig = {
+    config: firebaseConfig,
+    isConfigured: isFirebaseConfigured,
+    allowedMembers: ALLOWED_MEMBERS,
+    isMemberAllowed,
+    getApp: () => firebaseApp,
+    getAuth: () => firebaseAuth
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    firebaseConfig,
+    isFirebaseConfigured,
+    ALLOWED_MEMBERS,
+    isMemberAllowed
+  };
+}

@@ -171,7 +171,23 @@ function removeSession(sessionId) {
 // Allowed Members Whitelist helpers (reads dynamically from firebase-config.js or fallback)
 function getAllowedMembers() {
   try {
-    const configPath = path.join(__dirname, 'firebase-config.js');
+    const cfg = require('./public/firebase-config.js');
+    if (Array.isArray(cfg.ALLOWED_MEMBERS) && cfg.ALLOWED_MEMBERS.length > 0) {
+      return cfg.ALLOWED_MEMBERS.map(e => e.trim().toLowerCase());
+    }
+  } catch {}
+
+  try {
+    const cfg = require('./firebase-config.js');
+    if (Array.isArray(cfg.ALLOWED_MEMBERS) && cfg.ALLOWED_MEMBERS.length > 0) {
+      return cfg.ALLOWED_MEMBERS.map(e => e.trim().toLowerCase());
+    }
+  } catch {}
+
+  try {
+    const publicConfig = path.join(__dirname, 'public', 'firebase-config.js');
+    const rootConfig = path.join(__dirname, 'firebase-config.js');
+    const configPath = fs.existsSync(publicConfig) ? publicConfig : rootConfig;
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, 'utf8');
       const match = content.match(/ALLOWED_MEMBERS\s*=\s*\[([\s\S]*?)\]/);
@@ -187,12 +203,10 @@ function getAllowedMembers() {
     console.error('Error reading allowed members from firebase-config.js:', err);
   }
   return [
-    'admin@memoryalbum.com',
-    'family@memoryalbum.com',
-    'member@memoryalbum.com',
-    'owner@example.com',
-    'test@example.com',
-    'flowtest@example.com'
+    'sahimage691@gmail.com',
+    'supriya123@gmail.com',
+    'niharika@gmail.com',
+    'rijangurung@gmail.com'
   ];
 }
 

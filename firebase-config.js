@@ -69,12 +69,23 @@ function isMemberAllowed(email) {
   return ALLOWED_MEMBERS.map(m => m.toLowerCase()).includes(clean);
 }
 
-// Expose configuration globally
-window.FirebaseConfig = {
-  config: firebaseConfig,
-  isConfigured: isFirebaseConfigured,
-  allowedMembers: ALLOWED_MEMBERS,
-  isMemberAllowed,
-  getApp: () => firebaseApp,
-  getAuth: () => firebaseAuth
-};
+// Expose configuration globally for browser and Node.js
+if (typeof window !== 'undefined') {
+  window.FirebaseConfig = {
+    config: firebaseConfig,
+    isConfigured: isFirebaseConfigured,
+    allowedMembers: ALLOWED_MEMBERS,
+    isMemberAllowed,
+    getApp: () => firebaseApp,
+    getAuth: () => firebaseAuth
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    firebaseConfig,
+    isFirebaseConfigured,
+    ALLOWED_MEMBERS,
+    isMemberAllowed
+  };
+}
