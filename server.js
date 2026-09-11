@@ -147,8 +147,11 @@ function createSession(user) {
   return token;
 }
 
+const revokedTokens = new Set();
+
 function getSession(sessionId) {
   if (!sessionId || typeof sessionId !== 'string') return null;
+  if (revokedTokens.has(sessionId)) return null;
 
   // 1. Verify signed token (Stateless, 100% reliable across separate serverless lambda instances)
   if (sessionId.includes('.')) {
@@ -200,6 +203,7 @@ function getSession(sessionId) {
 
 function removeSession(sessionId) {
   if (!sessionId) return;
+  revokedTokens.add(sessionId);
   try {
     const sessions = readSessions();
     if (sessions[sessionId]) {
@@ -709,12 +713,15 @@ app.delete('/api/albums/:id', requireAuth, (req, res) => {
 // PHOTO ROUTES
 // =======================================================
 
-// Upload single photo (backward compatible)
+// Upload single photo (Supports Firebase Storage imageUrl or local imageBase64)
 app.post('/api/albums/:id/photos', requireAuth, (req, res) => {
-  const { imageBase64, title, tags, description } = req.body;
+  const { imageBase64, imageUrl, url, filename, title, tags, description, sizeBytes } = req.body;
   const albumId = req.params.id;
+  const finalUrl = imageUrl || url;
 
-  if (!imageBase64) return res.status(400).json({ error: 'Image data required' });
+  if (!finalUrl && !imageBase64) {
+    return res.status(400).json({ error: 'Image URL or image data required' });
+  }
 
   const data = readAlbums();
   const albumIndex = data.albums.findIndex(a => a.id === albumId && a.userId === req.user.id);
@@ -722,16 +729,26 @@ app.post('/api/albums/:id/photos', requireAuth, (req, res) => {
   if (albumIndex === -1) return res.status(404).json({ error: 'Album not found' });
 
   try {
-    const saved = saveBase64Image(imageBase64);
     const now = new Date().toISOString();
+    let photoUrl = finalUrl;
+    let photoFilename = filename || 'firebase_image';
+    let photoSize = sizeBytes || 0;
+
+    // Local fallback if base64 provided
+    if (!photoUrl && imageBase64) {
+      const saved = saveBase64Image(imageBase64);
+      photoUrl = saved.url;
+      photoFilename = saved.filename;
+      photoSize = saved.sizeBytes;
+    }
 
     const photo = {
       id: generateId(),
       title: (title || 'Untitled').trim(),
       description: (description || '').trim(),
-      filename: saved.filename,
-      url: saved.url,
-      sizeBytes: saved.sizeBytes,
+      filename: photoFilename,
+      url: photoUrl,
+      sizeBytes: photoSize,
       tags: Array.isArray(tags) ? tags : (tags ? String(tags).split(',').map(t => t.trim()).filter(Boolean) : []),
       isFavorite: false,
       createdAt: now,
@@ -757,7 +774,7 @@ app.post('/api/albums/:id/photos', requireAuth, (req, res) => {
   }
 });
 
-// Batch upload multiple photos
+// Batch upload multiple photos (Supports Firebase Storage imageUrl or local imageBase64)
 app.post('/api/albums/:id/photos/batch', requireAuth, (req, res) => {
   const { photos } = req.body;
   const albumId = req.params.id;
@@ -775,16 +792,28 @@ app.post('/api/albums/:id/photos/batch', requireAuth, (req, res) => {
   const now = new Date().toISOString();
 
   for (const item of photos) {
-    if (!item.imageBase64) continue;
+    const itemUrl = item.imageUrl || item.url;
+    if (!itemUrl && !item.imageBase64) continue;
+
     try {
-      const saved = saveBase64Image(item.imageBase64);
+      let photoUrl = itemUrl;
+      let photoFilename = item.filename || 'firebase_image';
+      let photoSize = item.sizeBytes || 0;
+
+      if (!photoUrl && item.imageBase64) {
+        const saved = saveBase64Image(item.imageBase64);
+        photoUrl = saved.url;
+        photoFilename = saved.filename;
+        photoSize = saved.sizeBytes;
+      }
+
       const photo = {
         id: generateId(),
         title: (item.title || 'Untitled').trim(),
         description: (item.description || '').trim(),
-        filename: saved.filename,
-        url: saved.url,
-        sizeBytes: saved.sizeBytes,
+        filename: photoFilename,
+        url: photoUrl,
+        sizeBytes: photoSize,
         tags: Array.isArray(item.tags) ? item.tags : (item.tags ? String(item.tags).split(',').map(t => t.trim()).filter(Boolean) : []),
         isFavorite: false,
         createdAt: now,

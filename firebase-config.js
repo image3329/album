@@ -40,6 +40,7 @@ const isFirebaseConfigured = Boolean(
 // Initialize Firebase App if SDK is loaded and credentials are set
 let firebaseApp = null;
 let firebaseAuth = null;
+let firebaseStorage = null;
 
 if (typeof firebase !== 'undefined') {
   if (isFirebaseConfigured) {
@@ -47,6 +48,10 @@ if (typeof firebase !== 'undefined') {
       firebaseApp = firebase.initializeApp(firebaseConfig);
       firebaseAuth = firebase.auth();
       console.log('Firebase Authentication initialized successfully.');
+      if (typeof firebase.storage === 'function') {
+        firebaseStorage = firebase.storage();
+        console.log('Firebase Storage initialized successfully.');
+      }
     } catch (err) {
       console.error('Error initializing Firebase:', err);
     }
@@ -69,6 +74,97 @@ function isMemberAllowed(email) {
   return ALLOWED_MEMBERS.map(m => m.toLowerCase()).includes(clean);
 }
 
+function waitForFirebaseAuth(timeoutMs = 3000) {
+  return new Promise(resolve => {
+    if (!firebaseAuth) return resolve(null);
+    if (firebaseAuth.currentUser) return resolve(firebaseAuth.currentUser);
+    let resolved = false;
+    const unsub = firebaseAuth.onAuthStateChanged(user => {
+      if (!resolved) {
+        resolved = true;
+        try { unsub(); } catch {}
+        resolve(user);
+      }
+    });
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        try { unsub(); } catch {}
+        resolve(firebaseAuth.currentUser || null);
+      }
+    }, timeoutMs);
+  });
+}
+
+/**
+ * Upload an image file directly to Firebase Storage.
+ * Returns a permanent, fast-loading HTTPS URL.
+ * @param {File} file 
+ * @param {string} albumId 
+ * @param {Function} [onProgress] Callback with percentage 0-100
+ * @returns {Promise<{ url: string, filename: string, sizeBytes: number }>}
+ */
+async function uploadFileToStorage(file, albumId, onProgress) {
+  if (!firebaseStorage) {
+    throw new Error('Firebase Storage is not initialized');
+  }
+
+  await waitForFirebaseAuth();
+  const user = firebaseAuth?.currentUser;
+  let userPrefix = user ? user.uid : null;
+  if (!userPrefix) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('memoryAlbumUser') || '{}');
+      userPrefix = cached.id || cached.uid;
+    } catch {}
+  }
+  userPrefix = userPrefix || 'member';
+
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const storagePath = `users/${userPrefix}/albums/${albumId || 'general'}/${timestamp}_${safeName}`;
+  const storageRef = firebaseStorage.ref().child(storagePath);
+
+  const metadata = {
+    contentType: file.type || 'image/jpeg',
+    customMetadata: {
+      originalName: file.name,
+      albumId: albumId || 'general',
+      uploadedAt: new Date().toISOString()
+    }
+  };
+
+  const uploadTask = storageRef.put(file, metadata);
+
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      'state_changed',
+      snapshot => {
+        if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
+          const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          onProgress(percent);
+        }
+      },
+      err => {
+        console.error('Firebase Storage upload error:', err);
+        reject(err);
+      },
+      async () => {
+        try {
+          const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+          resolve({
+            url: downloadUrl,
+            filename: safeName,
+            sizeBytes: file.size
+          });
+        } catch (urlErr) {
+          reject(urlErr);
+        }
+      }
+    );
+  });
+}
+
 // Expose configuration globally for browser and Node.js
 if (typeof window !== 'undefined') {
   window.FirebaseConfig = {
@@ -77,7 +173,10 @@ if (typeof window !== 'undefined') {
     allowedMembers: ALLOWED_MEMBERS,
     isMemberAllowed,
     getApp: () => firebaseApp,
-    getAuth: () => firebaseAuth
+    getAuth: () => firebaseAuth,
+    getStorage: () => firebaseStorage,
+    hasStorage: () => Boolean(firebaseStorage),
+    uploadFileToStorage
   };
 }
 

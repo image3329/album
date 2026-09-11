@@ -550,7 +550,7 @@ function renderAlbums(albums) {
     const categoryIcon = album.category === 'place' ? '🌍' : (album.category === 'person' ? '👤' : '✨');
 
     const coverVisual = coverUrl
-      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(album.title)}" class="album-main-cover" loading="lazy" />`
+      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(album.title)}" class="album-main-cover" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'album-cover-placeholder\\'><span>${categoryIcon}</span></div>';" />`
       : `<div class="album-cover-placeholder"><span>${categoryIcon}</span></div>`;
 
     return `
@@ -673,7 +673,7 @@ function renderAlbumPhotosGrid(photos, albumId, albumTitle) {
 
     return `
       <article class="photo-card-premium photo-card" data-id="${photo.id}" onclick="window.openLightboxIndex(${index})">
-        <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(photo.title)}" class="photo-card-img" loading="lazy" />
+        <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(photo.title)}" class="photo-card-img" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%3E%3Crect%20fill%3D%22%231e293b%22%20width%3D%22400%22%20height%3D%22300%22%2F%3E%3Ctext%20fill%3D%22%2394a3b8%22%20font-family%3D%22sans-serif%22%20font-size%3D%2218%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%3E%F0%9F%93%B7%20Photo%3C%2Ftext%3E%3C%2Fsvg%3E';" />
         <div class="photo-overlay">
           <div class="photo-overlay-top">
             <button type="button" class="photo-fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); window.togglePhotoFavorite('${albumId}', '${photo.id}')" title="Favorite">
@@ -726,7 +726,7 @@ function renderGallery(photos) {
 
     return `
       <article class="photo-card-premium photo-card" data-id="${photo.id}" onclick="window.openLightboxIndex(${index})">
-        <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(photo.title)}" class="photo-card-img" data-id="${photo.id}" data-album-id="${photo.albumId}" loading="lazy" />
+        <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(photo.title)}" class="photo-card-img" data-id="${photo.id}" data-album-id="${photo.albumId}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22300%22%20viewBox%3D%220%200%20400%20300%22%3E%3Crect%20fill%3D%22%231e293b%22%20width%3D%22400%22%20height%3D%22300%22%2F%3E%3Ctext%20fill%3D%22%2394a3b8%22%20font-family%3D%22sans-serif%22%20font-size%3D%2218%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%3E%F0%9F%93%B7%20Photo%3C%2Ftext%3E%3C%2Fsvg%3E';" />
         <div class="photo-overlay">
           <div class="photo-overlay-top">
             <button type="button" class="photo-fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); window.togglePhotoFavorite('${photo.albumId}', '${photo.id}')" title="Favorite">
@@ -1033,6 +1033,7 @@ async function uploadPhotos() {
   }
 
   const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+  const hasFirebaseStorage = Boolean(window.FirebaseConfig && window.FirebaseConfig.hasStorage());
 
   try {
     if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...'; }
@@ -1040,18 +1041,39 @@ async function uploadPhotos() {
 
     if (batchFilesToUpload.length === 1) {
       // Single upload
-      if (progressFill) progressFill.style.width = '50%';
-      if (progressText) progressText.textContent = '50%';
+      const file = batchFilesToUpload[0];
+      let photoPayload = { title, tags };
 
-      const base64 = await fileToBase64(batchFilesToUpload[0]);
+      if (hasFirebaseStorage) {
+        try {
+          if (progressText) progressText.textContent = 'Uploading to Firebase Storage...';
+          const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
+            const displayPercent = Math.round(percent * 0.85);
+            if (progressFill) progressFill.style.width = `${displayPercent}%`;
+            if (progressText) progressText.textContent = `Cloud Upload ${displayPercent}%`;
+          });
+          photoPayload.imageUrl = uploadRes.url;
+          photoPayload.url = uploadRes.url;
+          photoPayload.filename = uploadRes.filename;
+          photoPayload.sizeBytes = uploadRes.sizeBytes;
+        } catch (storageErr) {
+          console.warn('Direct Firebase Storage upload encountered error, attempting fallback:', storageErr);
+          const base64 = await fileToBase64(file);
+          photoPayload.imageBase64 = base64;
+        }
+      } else {
+        if (progressFill) progressFill.style.width = '50%';
+        if (progressText) progressText.textContent = '50%';
+        const base64 = await fileToBase64(file);
+        photoPayload.imageBase64 = base64;
+      }
+
+      if (progressFill) progressFill.style.width = '90%';
+      if (progressText) progressText.textContent = 'Saving photo...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos`, {
         method: 'POST',
-        body: JSON.stringify({
-          imageBase64: base64,
-          title,
-          tags
-        })
+        body: JSON.stringify(photoPayload)
       });
 
       if (!res.ok) {
@@ -1061,19 +1083,44 @@ async function uploadPhotos() {
     } else {
       // Batch upload
       const photosPayload = [];
-      for (let i = 0; i < batchFilesToUpload.length; i++) {
+      const totalFiles = batchFilesToUpload.length;
+
+      for (let i = 0; i < totalFiles; i++) {
         const file = batchFilesToUpload[i];
-        const base64 = await fileToBase64(file);
-        const fileNameClean = file.name.replace(/\.[^/.]+$/, '');
-        photosPayload.push({
-          imageBase64: base64,
-          title: `${title} (${i + 1})`,
-          tags
-        });
-        const percent = Math.round(((i + 1) / batchFilesToUpload.length) * 80);
-        if (progressFill) progressFill.style.width = `${percent}%`;
-        if (progressText) progressText.textContent = `${percent}%`;
+        const itemTitle = `${title} (${i + 1})`;
+        const itemPayload = { title: itemTitle, tags };
+
+        const basePercent = Math.round((i / totalFiles) * 85);
+        if (progressFill) progressFill.style.width = `${basePercent}%`;
+        if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${basePercent}%)`;
+
+        if (hasFirebaseStorage) {
+          try {
+            const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
+              const fileContribution = Math.round((percent / 100) * (85 / totalFiles));
+              const currentTotal = basePercent + fileContribution;
+              if (progressFill) progressFill.style.width = `${currentTotal}%`;
+              if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
+            });
+            itemPayload.imageUrl = uploadRes.url;
+            itemPayload.url = uploadRes.url;
+            itemPayload.filename = uploadRes.filename;
+            itemPayload.sizeBytes = uploadRes.sizeBytes;
+          } catch (storageErr) {
+            console.warn(`Direct upload failed for file ${file.name}, using base64 fallback:`, storageErr);
+            const base64 = await fileToBase64(file);
+            itemPayload.imageBase64 = base64;
+          }
+        } else {
+          const base64 = await fileToBase64(file);
+          itemPayload.imageBase64 = base64;
+        }
+
+        photosPayload.push(itemPayload);
       }
+
+      if (progressFill) progressFill.style.width = '92%';
+      if (progressText) progressText.textContent = 'Saving album photos...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos/batch`, {
         method: 'POST',
@@ -1089,7 +1136,7 @@ async function uploadPhotos() {
     if (progressFill) progressFill.style.width = '100%';
     if (progressText) progressText.textContent = '100%';
 
-    showToast('Photos uploaded successfully! 📸', 'success');
+    showToast('Photos stored in Firebase Storage successfully! 📸☁️', 'success');
     document.getElementById('photoModal').hidden = true;
     resetPhotoForm();
 
@@ -1099,7 +1146,11 @@ async function uploadPhotos() {
     }
   } catch (err) {
     console.error('Error uploading photos:', err);
-    showToast(err.message || 'Upload failed', 'error');
+    let msg = err.message || 'Upload failed';
+    if (err.code === 'storage/unauthorized' || msg.includes('unauthorized') || msg.includes('permission-denied')) {
+      msg = 'Firebase Storage permission denied. Please check your Firebase Storage security rules in the Firebase console.';
+    }
+    showToast(msg, 'error', 6000);
   } finally {
     if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Photo'; }
   }
@@ -1245,7 +1296,12 @@ function updateLightboxContent() {
 
   const photoUrl = window.MemoryAlbumAuth.resolveMediaUrl(photo.url);
 
-  if (viewerImg) viewerImg.src = photoUrl;
+  if (viewerImg) {
+    viewerImg.onerror = () => {
+      viewerImg.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22600%22%20viewBox%3D%220%200%20800%20600%22%3E%3Crect%20fill%3D%22%231e293b%22%20width%3D%22800%22%20height%3D%22600%22%2F%3E%3Ctext%20fill%3D%22%2394a3b8%22%20font-family%3D%22sans-serif%22%20font-size%3D%2224%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%3E%F0%9F%93%B7%20Photo%20Unavailable%3C%2Ftext%3E%3C%2Fsvg%3E';
+    };
+    viewerImg.src = photoUrl;
+  }
   if (viewerTitle) viewerTitle.textContent = photo.title || 'Untitled';
   if (viewerAlbum) viewerAlbum.textContent = photo.albumTitle || 'Album';
   if (viewerDate) viewerDate.textContent = new Date(photo.createdAt).toLocaleDateString();

@@ -4,7 +4,7 @@ function apiRequest(method, path, body, headers = {}) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'localhost',
-      port: 3000,
+      port: process.env.TEST_PORT || 3000,
       path,
       method,
       headers: {
@@ -38,8 +38,8 @@ function apiRequest(method, path, body, headers = {}) {
 }
 
 async function testFlow() {
-  const authorizedMemberEmail = 'member@memoryalbum.com';
-  const authorizedMemberUser = 'Authorized Member';
+  const authorizedMemberEmail = 'sahimage691@gmail.com';
+  const authorizedMemberUser = 'Sah Image';
   const unauthorizedEmail = 'intruder@randomdomain.com';
 
   let sessionId = '';
@@ -131,6 +131,23 @@ async function testFlow() {
     createdPhotoId = upload.body.photo.id;
   } catch (e) {
     assert(false, `Upload photo: error - ${e.message}`);
+  }
+
+  // 5b. Upload photo via Firebase Storage direct Cloud URL
+  console.log('\n5b. Uploading photo via Firebase Storage Cloud URL...');
+  try {
+    const cloudUrl = 'https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123';
+    const uploadCloud = await apiRequest('POST', `/api/albums/${createdAlbumId}/photos`, {
+      imageUrl: cloudUrl,
+      title: 'Cloud Stored Sunset Photo',
+      filename: 'test.jpg',
+      sizeBytes: 10240,
+      tags: ['firebase', 'cloud'],
+    }, { 'x-session-id': sessionId });
+    assert(uploadCloud.statusCode === 201, `Upload cloud photo: status ${uploadCloud.statusCode}`);
+    assert(uploadCloud.body.photo.url === cloudUrl, 'Upload cloud photo: URL correctly preserved as cloud URL');
+  } catch (e) {
+    assert(false, `Upload cloud photo: error - ${e.message}`);
   }
 
   // 6. Favorite and update photo
