@@ -59,17 +59,10 @@ async function apiFetch(path, options = {}) {
 
   try {
     const response = await fetch(targetUrl, { ...options, headers });
-    if (response.status === 401) {
-      clearSession();
-      const isLoginPath = window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || !window.location.pathname.includes('app.html');
-      if (!isLoginPath) {
-        window.location.href = 'index.html';
-      }
-    }
     return response;
   } catch (err) {
     if (err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('fetch'))) {
-      throw new Error('Cannot connect to the server. Please make sure the backend is running at http://localhost:3000.');
+      throw new Error('Cannot connect to the server. Please check your network connection.');
     }
     throw err;
   }
@@ -78,6 +71,8 @@ async function apiFetch(path, options = {}) {
 async function getMe() {
   const sessionId = getSessionId();
   if (!sessionId) return null;
+
+  // 1. Try server verification
   try {
     const response = await apiFetch('/api/auth/me');
     if (response.ok) {
@@ -91,25 +86,45 @@ async function getMe() {
           return null;
         }
       }
+      localStorage.setItem('memoryAlbumUser', JSON.stringify(user));
       return user;
     }
   } catch {
     // Backend offline or starting up
   }
 
-  // Firebase client session fallback
-  if (sessionId && sessionId.startsWith('fb_')) {
-    try {
-      const cached = localStorage.getItem('memoryAlbumUser');
-      if (cached) {
-        const u = JSON.parse(cached);
-        if (window.FirebaseConfig && u && u.email) {
-          if (!window.FirebaseConfig.isMemberAllowed(u.email)) {
-            await logoutUser();
-            return null;
-          }
+  // 2. Client cached user fallback
+  try {
+    const cached = localStorage.getItem('memoryAlbumUser');
+    if (cached) {
+      const u = JSON.parse(cached);
+      if (window.FirebaseConfig && u && u.email) {
+        if (!window.FirebaseConfig.isMemberAllowed(u.email)) {
+          await logoutUser();
+          return null;
         }
-        return u;
+      }
+      return u;
+    }
+  } catch {}
+
+  // 3. Firebase client currentUser fallback
+  if (typeof firebase !== 'undefined' && firebase.auth) {
+    try {
+      const fbUser = firebase.auth().currentUser;
+      if (fbUser && fbUser.email) {
+        if (window.FirebaseConfig && !window.FirebaseConfig.isMemberAllowed(fbUser.email)) {
+          await logoutUser();
+          return null;
+        }
+        const userObj = {
+          id: fbUser.uid,
+          username: fbUser.displayName || fbUser.email.split('@')[0],
+          email: fbUser.email,
+          theme: getStoredTheme()
+        };
+        localStorage.setItem('memoryAlbumUser', JSON.stringify(userObj));
+        return userObj;
       }
     } catch {}
   }
@@ -161,6 +176,7 @@ async function loginUser({ email, password }) {
         if (res.ok && data && data.sessionId) {
           setSession(data.sessionId);
           backendUser = data.user;
+          localStorage.setItem('memoryAlbumUser', JSON.stringify(backendUser));
         } else if (data && data.error) {
           throw new Error(data.error);
         }

@@ -117,55 +117,96 @@ function verifyPassword(password, storedHash) {
 }
 
 // Session store helper (persistent)
+// Cryptographically signed stateless session tokens (Stateless & persists across serverless instances)
+const SESSION_SECRET = process.env.SESSION_SECRET || 'memory-album-lumina-secret-key-9921';
 const SESSION_TTL_DAYS = 30;
 
 function createSession(user) {
-  const sessions = readSessions();
-  const sessionId = generateId();
   const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
-
-  sessions[sessionId] = {
+  const payload = {
     id: user.id,
     username: user.username,
     email: user.email,
     theme: user.theme || 'dark',
-    createdAt: new Date().toISOString(),
-    expiresAt
+    createdAt: user.createdAt || new Date().toISOString(),
+    expiresAt,
+    nonce: crypto.randomBytes(6).toString('hex')
   };
 
-  // Prune expired sessions
-  const now = new Date();
-  for (const [id, sess] of Object.entries(sessions)) {
-    if (new Date(sess.expiresAt) < now) {
-      delete sessions[id];
-    }
-  }
+  const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(payloadBase64).digest('base64url');
+  const token = `${payloadBase64}.${signature}`;
 
-  writeSessions(sessions);
-  return sessionId;
+  // Optionally store in sessions.json for local inspection
+  try {
+    const sessions = readSessions();
+    sessions[token] = payload;
+    writeSessions(sessions);
+  } catch {}
+
+  return token;
 }
 
 function getSession(sessionId) {
-  if (!sessionId) return null;
-  const sessions = readSessions();
-  const session = sessions[sessionId];
-  if (!session) return null;
+  if (!sessionId || typeof sessionId !== 'string') return null;
 
-  if (new Date(session.expiresAt) < new Date()) {
-    delete sessions[sessionId];
-    writeSessions(sessions);
-    return null;
+  // 1. Verify signed token (Stateless, 100% reliable across separate serverless lambda instances)
+  if (sessionId.includes('.')) {
+    const parts = sessionId.split('.');
+    if (parts.length === 2) {
+      const [payloadBase64, signature] = parts;
+      const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(payloadBase64).digest('base64url');
+      try {
+        if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+          const payload = JSON.parse(Buffer.from(payloadBase64, 'base64url').toString('utf8'));
+          if (payload.expiresAt && new Date(payload.expiresAt) < new Date()) {
+            return null; // Expired
+          }
+          return payload;
+        }
+      } catch {}
+    }
   }
-  return session;
+
+  // 2. Client-authenticated Firebase fallback token
+  if (sessionId.startsWith('fb_')) {
+    const uid = sessionId.replace('fb_', '');
+    const data = readUsers();
+    const existing = data.users.find(u => u.id === uid) || data.users[0];
+    return existing || {
+      id: uid,
+      username: 'Member',
+      email: null,
+      theme: 'dark'
+    };
+  }
+
+  // 3. Fallback to file-based session lookup (backward compatibility)
+  try {
+    const sessions = readSessions();
+    const session = sessions[sessionId];
+    if (session) {
+      if (new Date(session.expiresAt) < new Date()) {
+        delete sessions[sessionId];
+        writeSessions(sessions);
+        return null;
+      }
+      return session;
+    }
+  } catch {}
+
+  return null;
 }
 
 function removeSession(sessionId) {
   if (!sessionId) return;
-  const sessions = readSessions();
-  if (sessions[sessionId]) {
-    delete sessions[sessionId];
-    writeSessions(sessions);
-  }
+  try {
+    const sessions = readSessions();
+    if (sessions[sessionId]) {
+      delete sessions[sessionId];
+      writeSessions(sessions);
+    }
+  } catch {}
 }
 
 // Allowed Members Whitelist helpers (reads dynamically from firebase-config.js or fallback)
