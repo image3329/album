@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Test outputs
+test-results/
+playwright-report/
+tmp/
+
+# Logs & Environment
+*.log
+.env
+.env.local
+
+# Operating System
+.DS_Store
+Thumbs.db

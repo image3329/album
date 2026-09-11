@@ -1,0 +1,999 @@
+{
+  "albums": [
+    {
+      "id": "mtvtyb72sbyuuenml",
+      "userId": "mtvtyb6jt9v8btp1m",
+      "title": "Swiss Alps Expedition",
+      "category": "place",
+      "description": "Breathtaking peaks and valleys",
+      "cover": "/uploads/mtvtyb75aaktwdhra.png",
+      "photos": [
+        {
+          "id": "mtvtyb76tp51ggd1t",
+          "title": "Matterhorn Sunrise",
+          "filename": "mtvtyb75aaktwdhra.png",
+          "url": "/uploads/mtvtyb75aaktwdhra.png",
+          "tags": [
+            "matterhorn",
+            "alps",
+            "sunrise"
+          ],
+          "createdAt": "2026-09-10T17:57:38.994Z"
+        }
+      ],
+      "createdAt": "2026-09-10T17:57:38.990Z",
+      "updatedAt": "2026-09-10T17:57:38.994Z"
+    },
+    {
+      "id": "mtwgjvddkmphofkh9",
+      "userId": "mtwgj9s0lw4oq80kn",
+      "title": "Paris Trip",
+      "category": "place",
+      "description": "My trip to Paris",
+      "cover": "/uploads/mtwgnk1goqypv7s80.png",
+      "photos": [
+        {
+          "id": "mtwgnk1hzxsug5k94",
+          "title": "Test Photo",
+          "filename": "mtwgnk1goqypv7s80.png",
+          "url": "/uploads/mtwgnk1goqypv7s80.png",
+          "tags": [
+            "test"
+          ],
+          "createdAt": "2026-09-11T04:33:08.405Z"
+        }
+      ],
+      "createdAt": "2026-09-11T04:30:16.465Z",
+      "updatedAt": "2026-09-11T04:33:08.405Z"
+    },
+    {
+      "id": "mtwgl3k600ui2e5el",
+      "userId": "mtwgksrt4z9op7l9v",
+      "title": "AERGREAG",
+      "category": "place",
+      "description": "GAGRAE",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T04:31:13.734Z",
+      "updatedAt": "2026-09-11T04:31:13.734Z"
+    },
+    {
+      "id": "mtwgtcrr3fyx10neg",
+      "userId": "mtwgj9s0lw4oq80kn",
+      "title": "Test Album",
+      "category": "place",
+      "description": "A test album",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T04:37:38.919Z",
+      "updatedAt": "2026-09-11T04:37:38.919Z"
+    },
+    {
+      "id": "mtwh495e4k5qadr0r",
+      "userId": "mtwh4950zj5k6pkh1",
+      "title": "Flow Test Album",
+      "category": "place",
+      "description": "Created during flow test",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T04:46:07.442Z",
+      "updatedAt": "2026-09-11T04:46:07.442Z"
+    },
+    {
+      "id": "mtwh82c1rrseet6qe",
+      "userId": "mtwh824beg8mqejpq",
+      "title": "Test Album",
+      "category": "place",
+      "description": "An E2E test album",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T04:49:05.233Z",
+      "updatedAt": "2026-09-11T04:49:05.233Z"
+    },
+    {
+      "id": "mtwjc8jmu1o4vlcgr",
+      "userId": "mtwh4950zj5k6pkh1",
+      "title": "Flow Test Album",
+      "category": "place",
+      "description": "Created during flow test",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T05:48:19.138Z",
+      "updatedAt": "2026-09-11T05:48:19.138Z"
+    },
+    {
+      "id": "mtwji6mfa3bde882058e",
+      "userId": "mtwji6jkbe816d85df3f",
+      "title": "Dolomites Adventure",
+      "category": "place",
+      "description": "Mountain hiking in northern Italy",
+      "cover": "/uploads/mtwji6ml795690e5ef02.png",
+      "photos": [
+        {
+          "id": "mtwji6mn0e2bd812313f",
+          "title": "Tre Cime at Sunset",
+          "description": "Golden hour at Tre Cime",
+          "filename": "mtwji6ml795690e5ef02.png",
+          "url": "/uploads/mtwji6ml795690e5ef02.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "alps",
+            "favorite"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T05:52:56.591Z",
+          "updatedAt": "2026-09-11T05:52:56.607Z"
+        }
+      ],
+      "createdAt": "2026-09-11T05:52:56.583Z",
+      "updatedAt": "2026-09-11T05:52:56.607Z"
+    },
+    {
+      "id": "mtwjljpia81e446bc1da",
+      "userId": "mtwjljmh55286f03773e",
+      "title": "Dolomites Adventure",
+      "category": "place",
+      "description": "Mountain hiking in northern Italy",
+      "cover": "/uploads/mtwjljpoe8fdb29b5646.png",
+      "photos": [
+        {
+          "id": "mtwjljpp50ae27727b9d",
+          "title": "Tre Cime at Sunset",
+          "description": "Golden hour at Tre Cime",
+          "filename": "mtwjljpoe8fdb29b5646.png",
+          "url": "/uploads/mtwjljpoe8fdb29b5646.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "alps",
+            "favorite"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T05:55:33.517Z",
+          "updatedAt": "2026-09-11T05:55:33.523Z"
+        }
+      ],
+      "createdAt": "2026-09-11T05:55:33.510Z",
+      "updatedAt": "2026-09-11T05:55:33.523Z"
+    },
+    {
+      "id": "mtwjlrc165a5e8be2540",
+      "userId": "mtwjlqnz9baeca5999dc",
+      "title": "Santorini Sunset 2026",
+      "category": "place",
+      "description": "White architecture and azure Aegean waters",
+      "cover": "/uploads/mtwjlrw54f14031a437b.png",
+      "photos": [
+        {
+          "id": "mtwjlrw6b1c9e7d17e27",
+          "title": "Oia Windmill Sunset",
+          "description": "",
+          "filename": "mtwjlrw54f14031a437b.png",
+          "url": "/uploads/mtwjlrw54f14031a437b.png",
+          "sizeBytes": 70,
+          "tags": [
+            "santorini",
+            "greece",
+            "sunset",
+            "travel"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T05:55:44.118Z",
+          "updatedAt": "2026-09-11T05:55:44.118Z"
+        }
+      ],
+      "createdAt": "2026-09-11T05:55:43.393Z",
+      "updatedAt": "2026-09-11T05:55:44.118Z"
+    },
+    {
+      "id": "mtwjntob51e5d61f7249",
+      "userId": "mtwjnt3ib1601ba7e872",
+      "title": "Santorini Sunset 2026",
+      "category": "place",
+      "description": "White architecture and azure Aegean waters",
+      "cover": "/uploads/mtwjnu7u3901c4b47a71.png",
+      "photos": [
+        {
+          "id": "mtwjnu7u5f238ac557f1",
+          "title": "Oia Windmill Sunset",
+          "description": "",
+          "filename": "mtwjnu7u3901c4b47a71.png",
+          "url": "/uploads/mtwjnu7u3901c4b47a71.png",
+          "sizeBytes": 70,
+          "tags": [
+            "santorini",
+            "greece",
+            "sunset",
+            "travel"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T05:57:20.442Z",
+          "updatedAt": "2026-09-11T05:57:20.820Z"
+        }
+      ],
+      "createdAt": "2026-09-11T05:57:19.739Z",
+      "updatedAt": "2026-09-11T05:57:20.820Z"
+    },
+    {
+      "id": "mtwjo1n10f8d97170e74",
+      "userId": "mtwjo1kec61df868f3ce",
+      "title": "Dolomites Adventure",
+      "category": "place",
+      "description": "Mountain hiking in northern Italy",
+      "cover": "/uploads/mtwjo1n6b123bcd2dbfd.png",
+      "photos": [
+        {
+          "id": "mtwjo1n72dcbf3c9a215",
+          "title": "Tre Cime at Sunset",
+          "description": "Golden hour at Tre Cime",
+          "filename": "mtwjo1n6b123bcd2dbfd.png",
+          "url": "/uploads/mtwjo1n6b123bcd2dbfd.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "alps",
+            "favorite"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T05:57:30.067Z",
+          "updatedAt": "2026-09-11T05:57:30.072Z"
+        }
+      ],
+      "createdAt": "2026-09-11T05:57:30.061Z",
+      "updatedAt": "2026-09-11T05:57:30.072Z"
+    },
+    {
+      "id": "mtwjrtog2f87655769a2",
+      "userId": "mtwjrmhyf73254a57041",
+      "title": "happy",
+      "category": "place",
+      "description": "",
+      "cover": "/uploads/mtwjstkg3a4fc32fce89.jpg",
+      "photos": [
+        {
+          "id": "mtwjstkib9d5fad7aa58",
+          "title": "cuties (1)",
+          "description": "",
+          "filename": "mtwjstkg3a4fc32fce89.jpg",
+          "url": "/uploads/mtwjstkg3a4fc32fce89.jpg",
+          "sizeBytes": 223468,
+          "tags": [],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:02:41.171Z"
+        },
+        {
+          "id": "mtwjstkj61a0edecab70",
+          "title": "cuties (2)",
+          "description": "",
+          "filename": "mtwjstki67023d7fab91.jpg",
+          "url": "/uploads/mtwjstki67023d7fab91.jpg",
+          "sizeBytes": 204305,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkka74408a1adac",
+          "title": "cuties (3)",
+          "description": "",
+          "filename": "mtwjstkk8528ee97abb3.jpg",
+          "url": "/uploads/mtwjstkk8528ee97abb3.jpg",
+          "sizeBytes": 87458,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkmcb919392e2f0",
+          "title": "cuties (4)",
+          "description": "",
+          "filename": "mtwjstkl72290822c4b4.jpg",
+          "url": "/uploads/mtwjstkl72290822c4b4.jpg",
+          "sizeBytes": 84120,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstko73d954c3ce7e",
+          "title": "cuties (5)",
+          "description": "",
+          "filename": "mtwjstkm3da2feabf9d6.jpg",
+          "url": "/uploads/mtwjstkm3da2feabf9d6.jpg",
+          "sizeBytes": 56697,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkpc902b3eec2ae",
+          "title": "cuties (6)",
+          "description": "",
+          "filename": "mtwjstko810ea5fe969d.jpg",
+          "url": "/uploads/mtwjstko810ea5fe969d.jpg",
+          "sizeBytes": 60822,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkr679bde0842ad",
+          "title": "cuties (7)",
+          "description": "",
+          "filename": "mtwjstkp7088f075818c.webp",
+          "url": "/uploads/mtwjstkp7088f075818c.webp",
+          "sizeBytes": 367986,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkt95a9633bf0f5",
+          "title": "cuties (8)",
+          "description": "",
+          "filename": "mtwjstkr002a43f742d2.webp",
+          "url": "/uploads/mtwjstkr002a43f742d2.webp",
+          "sizeBytes": 260992,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkv6733b2d05a68",
+          "title": "cuties (9)",
+          "description": "",
+          "filename": "mtwjstku35ea32cc33e6.webp",
+          "url": "/uploads/mtwjstku35ea32cc33e6.webp",
+          "sizeBytes": 325488,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstkzfe56094200bf",
+          "title": "cuties (10)",
+          "description": "",
+          "filename": "mtwjstkw9f221a3d5039.webp",
+          "url": "/uploads/mtwjstkw9f221a3d5039.webp",
+          "sizeBytes": 342600,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl13170a99c94dd",
+          "title": "cuties (11)",
+          "description": "",
+          "filename": "mtwjstl0c6d72eefd0c9.webp",
+          "url": "/uploads/mtwjstl0c6d72eefd0c9.webp",
+          "sizeBytes": 284072,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl360a7895e0fb8",
+          "title": "cuties (12)",
+          "description": "",
+          "filename": "mtwjstl226b84b39f4b6.webp",
+          "url": "/uploads/mtwjstl226b84b39f4b6.webp",
+          "sizeBytes": 223350,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl496d2a56ecee4",
+          "title": "cuties (13)",
+          "description": "",
+          "filename": "mtwjstl39186399e5170.jpg",
+          "url": "/uploads/mtwjstl39186399e5170.jpg",
+          "sizeBytes": 76818,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl53c4e047053e3",
+          "title": "cuties (14)",
+          "description": "",
+          "filename": "mtwjstl513aeec448312.jpg",
+          "url": "/uploads/mtwjstl513aeec448312.jpg",
+          "sizeBytes": 31017,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl6e426cfa435a8",
+          "title": "cuties (15)",
+          "description": "",
+          "filename": "mtwjstl56137d97a81ae.jpg",
+          "url": "/uploads/mtwjstl56137d97a81ae.jpg",
+          "sizeBytes": 31017,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl7057d7b88d549",
+          "title": "cuties (16)",
+          "description": "",
+          "filename": "mtwjstl6e074145a81e9.jpg",
+          "url": "/uploads/mtwjstl6e074145a81e9.jpg",
+          "sizeBytes": 101679,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstl8431dd30b7aad",
+          "title": "cuties (17)",
+          "description": "",
+          "filename": "mtwjstl73ae3eeacc797.jpg",
+          "url": "/uploads/mtwjstl73ae3eeacc797.jpg",
+          "sizeBytes": 79610,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstla7f3a669a58ab",
+          "title": "cuties (18)",
+          "description": "",
+          "filename": "mtwjstl9b901065b6109.jpg",
+          "url": "/uploads/mtwjstl9b901065b6109.jpg",
+          "sizeBytes": 134863,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlb5ee2e15bbbad",
+          "title": "cuties (19)",
+          "description": "",
+          "filename": "mtwjstla89a2c68c8da6.jpg",
+          "url": "/uploads/mtwjstla89a2c68c8da6.jpg",
+          "sizeBytes": 65959,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlda822af7a1edb",
+          "title": "cuties (20)",
+          "description": "",
+          "filename": "mtwjstlcc8ef85f5bf93.jpg",
+          "url": "/uploads/mtwjstlcc8ef85f5bf93.jpg",
+          "sizeBytes": 778254,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlfdc4b5a0d5127",
+          "title": "cuties (21)",
+          "description": "",
+          "filename": "mtwjstlee6f16e80b50e.jpg",
+          "url": "/uploads/mtwjstlee6f16e80b50e.jpg",
+          "sizeBytes": 636393,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlja231c834c2e0",
+          "title": "cuties (22)",
+          "description": "",
+          "filename": "mtwjstliae80a449d39d.jpg",
+          "url": "/uploads/mtwjstliae80a449d39d.jpg",
+          "sizeBytes": 1523888,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstll05f99d4abd67",
+          "title": "cuties (23)",
+          "description": "",
+          "filename": "mtwjstlk479efbadc83a.jpg",
+          "url": "/uploads/mtwjstlk479efbadc83a.jpg",
+          "sizeBytes": 167262,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlo46a420b31815",
+          "title": "cuties (24)",
+          "description": "",
+          "filename": "mtwjstlma0f10d9c6ef3.jpg",
+          "url": "/uploads/mtwjstlma0f10d9c6ef3.jpg",
+          "sizeBytes": 348910,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlq0e7db9a5d33c",
+          "title": "cuties (25)",
+          "description": "",
+          "filename": "mtwjstlp96033edac637.jpg",
+          "url": "/uploads/mtwjstlp96033edac637.jpg",
+          "sizeBytes": 342512,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlscb5c0b8a9c72",
+          "title": "cuties (26)",
+          "description": "",
+          "filename": "mtwjstlr36fcc29b4c0a.jpg",
+          "url": "/uploads/mtwjstlr36fcc29b4c0a.jpg",
+          "sizeBytes": 488005,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlv3842bdfcb8ba",
+          "title": "cuties (27)",
+          "description": "",
+          "filename": "mtwjstlt64e87d7f6525.jpg",
+          "url": "/uploads/mtwjstlt64e87d7f6525.jpg",
+          "sizeBytes": 396240,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstlx46945bdf6373",
+          "title": "cuties (28)",
+          "description": "",
+          "filename": "mtwjstlwe31fbafb334e.jpg",
+          "url": "/uploads/mtwjstlwe31fbafb334e.jpg",
+          "sizeBytes": 436042,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm0b352e0fadd45",
+          "title": "cuties (29)",
+          "description": "",
+          "filename": "mtwjstlya4007f3aa36b.jpg",
+          "url": "/uploads/mtwjstlya4007f3aa36b.jpg",
+          "sizeBytes": 272551,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm24cdb67b0cb4c",
+          "title": "cuties (30)",
+          "description": "",
+          "filename": "mtwjstm16cd02a260af8.jpg",
+          "url": "/uploads/mtwjstm16cd02a260af8.jpg",
+          "sizeBytes": 401974,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm48ae194db398f",
+          "title": "cuties (31)",
+          "description": "",
+          "filename": "mtwjstm369ce39e5812b.jpg",
+          "url": "/uploads/mtwjstm369ce39e5812b.jpg",
+          "sizeBytes": 458336,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm54d91bbb48e7f",
+          "title": "cuties (32)",
+          "description": "",
+          "filename": "mtwjstm4cb8b1ac98df4.jpg",
+          "url": "/uploads/mtwjstm4cb8b1ac98df4.jpg",
+          "sizeBytes": 464037,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm729bfebcc6ff9",
+          "title": "cuties (33)",
+          "description": "",
+          "filename": "mtwjstm615263fa476a3.jpg",
+          "url": "/uploads/mtwjstm615263fa476a3.jpg",
+          "sizeBytes": 211152,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm85de7bf53166d",
+          "title": "cuties (34)",
+          "description": "",
+          "filename": "mtwjstm735a46e4849f5.jpg",
+          "url": "/uploads/mtwjstm735a46e4849f5.jpg",
+          "sizeBytes": 197008,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstm90f3301ca5a17",
+          "title": "cuties (35)",
+          "description": "",
+          "filename": "mtwjstm8b7e4acf7d088.jpg",
+          "url": "/uploads/mtwjstm8b7e4acf7d088.jpg",
+          "sizeBytes": 311571,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmab8e9065d1bf6",
+          "title": "cuties (36)",
+          "description": "",
+          "filename": "mtwjstm9a82ce0f10143.jpg",
+          "url": "/uploads/mtwjstm9a82ce0f10143.jpg",
+          "sizeBytes": 323659,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmc316305000846",
+          "title": "cuties (37)",
+          "description": "",
+          "filename": "mtwjstmbd6814c8538aa.jpg",
+          "url": "/uploads/mtwjstmbd6814c8538aa.jpg",
+          "sizeBytes": 377908,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmedf9deeef386b",
+          "title": "cuties (38)",
+          "description": "",
+          "filename": "mtwjstmd8a94c7b08f4f.jpg",
+          "url": "/uploads/mtwjstmd8a94c7b08f4f.jpg",
+          "sizeBytes": 369055,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmhab4af0572f32",
+          "title": "cuties (39)",
+          "description": "",
+          "filename": "mtwjstmf866a229e9888.jpg",
+          "url": "/uploads/mtwjstmf866a229e9888.jpg",
+          "sizeBytes": 242803,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmj4d66f96ee446",
+          "title": "cuties (40)",
+          "description": "",
+          "filename": "mtwjstmi8ed94e8ba5c0.jpg",
+          "url": "/uploads/mtwjstmi8ed94e8ba5c0.jpg",
+          "sizeBytes": 576216,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmm08ad934d49d4",
+          "title": "cuties (41)",
+          "description": "",
+          "filename": "mtwjstmkdb1e311e7638.jpg",
+          "url": "/uploads/mtwjstmkdb1e311e7638.jpg",
+          "sizeBytes": 600124,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmp836cf181291a",
+          "title": "cuties (42)",
+          "description": "",
+          "filename": "mtwjstmn3571e48f0908.jpg",
+          "url": "/uploads/mtwjstmn3571e48f0908.jpg",
+          "sizeBytes": 644729,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmrf2c0f08e9c87",
+          "title": "cuties (43)",
+          "description": "",
+          "filename": "mtwjstmqb82034d3ca68.jpg",
+          "url": "/uploads/mtwjstmqb82034d3ca68.jpg",
+          "sizeBytes": 637715,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmtf1376f6cd6c6",
+          "title": "cuties (44)",
+          "description": "",
+          "filename": "mtwjstmsbb7129a334a2.jpg",
+          "url": "/uploads/mtwjstmsbb7129a334a2.jpg",
+          "sizeBytes": 310484,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmv94140e292f20",
+          "title": "cuties (45)",
+          "description": "",
+          "filename": "mtwjstmu589286fbeccd.jpg",
+          "url": "/uploads/mtwjstmu589286fbeccd.jpg",
+          "sizeBytes": 351651,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmxe9d20ec2174f",
+          "title": "cuties (46)",
+          "description": "",
+          "filename": "mtwjstmwe158b05226f2.jpg",
+          "url": "/uploads/mtwjstmwe158b05226f2.jpg",
+          "sizeBytes": 374613,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstmy4416cffd81a5",
+          "title": "cuties (47)",
+          "description": "",
+          "filename": "mtwjstmx86561c207532.jpg",
+          "url": "/uploads/mtwjstmx86561c207532.jpg",
+          "sizeBytes": 345488,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstn014874b9b56e9",
+          "title": "cuties (48)",
+          "description": "",
+          "filename": "mtwjstmzfacdf6c1a543.jpg",
+          "url": "/uploads/mtwjstmzfacdf6c1a543.jpg",
+          "sizeBytes": 368191,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstn2ca2189aed4da",
+          "title": "cuties (49)",
+          "description": "",
+          "filename": "mtwjstn1917db14d7416.jpg",
+          "url": "/uploads/mtwjstn1917db14d7416.jpg",
+          "sizeBytes": 368827,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstn574b1e096c1a3",
+          "title": "cuties (50)",
+          "description": "",
+          "filename": "mtwjstn3243cedacafe6.jpg",
+          "url": "/uploads/mtwjstn3243cedacafe6.jpg",
+          "sizeBytes": 263125,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        },
+        {
+          "id": "mtwjstn70bf73143681e",
+          "title": "cuties (51)",
+          "description": "",
+          "filename": "mtwjstn698e64a243c0f.jpg",
+          "url": "/uploads/mtwjstn698e64a243c0f.jpg",
+          "sizeBytes": 333543,
+          "tags": [],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:01:12.880Z",
+          "updatedAt": "2026-09-11T06:01:12.880Z"
+        }
+      ],
+      "createdAt": "2026-09-11T06:00:26.368Z",
+      "updatedAt": "2026-09-11T06:02:41.171Z"
+    },
+    {
+      "id": "mtwjtyd6457e149b64e0",
+      "userId": "mtwjrmhyf73254a57041",
+      "title": "Image",
+      "category": "person",
+      "description": "",
+      "cover": null,
+      "photos": [],
+      "createdAt": "2026-09-11T06:02:05.754Z",
+      "updatedAt": "2026-09-11T06:02:05.754Z"
+    },
+    {
+      "id": "mtwk791iea827a31014e",
+      "userId": "mtwk7913362c4c792c19",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mtwk791q47b3dae2efa1.png",
+      "photos": [
+        {
+          "id": "mtwk791r48582b606ca3",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mtwk791q47b3dae2efa1.png",
+          "url": "/uploads/mtwk791q47b3dae2efa1.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T06:12:26.127Z",
+          "updatedAt": "2026-09-11T06:12:26.133Z"
+        }
+      ],
+      "createdAt": "2026-09-11T06:12:26.118Z",
+      "updatedAt": "2026-09-11T06:12:26.133Z"
+    },
+    {
+      "id": "mtwk7rr7fd86bc329c88",
+      "userId": "mtwgj9s0lw4oq80kn",
+      "title": "Private Family Archive",
+      "category": "place",
+      "description": "Confidential private memories for family members only",
+      "cover": "/uploads/mtwk7sdf4e35ae375d3a.png",
+      "photos": [
+        {
+          "id": "mtwk7sdh521fc1f47576",
+          "title": "Family Gathering Panorama",
+          "description": "",
+          "filename": "mtwk7sdf4e35ae375d3a.png",
+          "url": "/uploads/mtwk7sdf4e35ae375d3a.png",
+          "sizeBytes": 70,
+          "tags": [
+            "family",
+            "private",
+            "archive"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:12:51.173Z",
+          "updatedAt": "2026-09-11T06:12:51.173Z"
+        }
+      ],
+      "createdAt": "2026-09-11T06:12:50.371Z",
+      "updatedAt": "2026-09-11T06:12:51.173Z"
+    },
+    {
+      "id": "mtwkqhta652695f29d4b",
+      "userId": "mtwgj9s0lw4oq80kn",
+      "title": "Private Family Archive",
+      "category": "place",
+      "description": "Confidential private memories for family members only",
+      "cover": "/uploads/mtwkqij01c1503cbcbdb.png",
+      "photos": [
+        {
+          "id": "mtwkqij1f9027788a6d1",
+          "title": "Family Gathering Panorama",
+          "description": "",
+          "filename": "mtwkqij01c1503cbcbdb.png",
+          "url": "/uploads/mtwkqij01c1503cbcbdb.png",
+          "sizeBytes": 70,
+          "tags": [
+            "family",
+            "private",
+            "archive"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-11T06:27:24.877Z",
+          "updatedAt": "2026-09-11T06:27:24.877Z"
+        }
+      ],
+      "createdAt": "2026-09-11T06:27:23.950Z",
+      "updatedAt": "2026-09-11T06:27:24.877Z"
+    },
+    {
+      "id": "mtwkqokybfc814542864",
+      "userId": "mtwk7913362c4c792c19",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mtwkqol633e8d2fd8a36.png",
+      "photos": [
+        {
+          "id": "mtwkqol86e8c9344fdc9",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mtwkqol633e8d2fd8a36.png",
+          "url": "/uploads/mtwkqol633e8d2fd8a36.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-11T06:27:32.732Z",
+          "updatedAt": "2026-09-11T06:27:32.738Z"
+        }
+      ],
+      "createdAt": "2026-09-11T06:27:32.721Z",
+      "updatedAt": "2026-09-11T06:27:32.738Z"
+    }
+  ]
+}

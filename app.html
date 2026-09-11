@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Memory Album — Modern, high-performance private photo collection and albums." />
+  <title>Memory Album — My Collection</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Global Application Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-section" id="brandHomeBtn" title="Go to Dashboard">
+        <div class="brand-logo-icon">🖼️</div>
+        <div>
+          <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); display: block;">Private Studio</span>
+          <h1 class="brand-title">Memory Album</h1>
+        </div>
+      </a>
+
+      <!-- Instant Live Search Bar -->
+      <div class="header-search">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search by title, location, tag or note..." autocomplete="off" />
+          <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search">&times;</button>
+        </div>
+      </div>
+
+      <!-- Header Actions & Profile -->
+      <div class="header-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+
+        <button type="button" class="btn-primary" id="addAlbumBtn">
+          <span>+</span> New Album
+        </button>
+
+        <!-- User Profile Dropdown Menu -->
+        <div class="user-menu" id="userMenuWrapper">
+          <button type="button" class="user-badge-btn" id="userBadgeBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="user-avatar-circle" id="userAvatar">👤</span>
+            <span id="userBadge">Loading...</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">▾</span>
+          </button>
+
+          <div class="user-dropdown" id="userDropdown" hidden>
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdownUserName">User</div>
+              <div class="user-dropdown-email" id="dropdownUserEmail">user@example.com</div>
+            </div>
+            <button type="button" class="dropdown-item" id="menuUploadPhotosBtn">
+              <span>📷</span> Upload Photos
+            </button>
+            <button type="button" class="dropdown-item" id="menuFavoritesBtn">
+              <span>💖</span> Starred Photos
+            </button>
+            <div style="height: 1px; background: var(--border-subtle); margin: 0.35rem 0;"></div>
+            <button type="button" class="dropdown-item danger" id="logoutBtn">
+              <span>🚪</span> Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main>
+    <!-- View Switcher Tabs & Filter Toolbar -->
+    <div class="view-nav-bar">
+      <div class="nav-tabs-group" role="tablist">
+        <button type="button" class="nav-tab-btn active" id="tabViewAlbums" role="tab" data-view="albums">
+          <span>📁</span> Albums <span class="nav-tab-count" id="badgeAlbumsCount">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" id="tabViewAllPhotos" data-view="photos">
+          <span>🖼️</span> All Photos <span class="nav-tab-count" id="badgePhotosCount">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" id="tabViewFavorites" data-view="favorites">
+          <span>💖</span> Starred <span class="nav-tab-count" id="badgeFavsCount">0</span>
+        </button>
+      </div>
+
+      <div class="controls-toolbar">
+        <div class="category-filter-chips" id="categoryFilters">
+          <button type="button" class="chip-btn active" data-filter="all">All Categories</button>
+          <button type="button" class="chip-btn" data-filter="place">🌍 Places</button>
+          <button type="button" class="chip-btn" data-filter="person">👤 People</button>
+          <button type="button" class="chip-btn" data-filter="use">✨ Events & Uses</button>
+        </div>
+
+        <select id="sortSelect" class="sort-select" aria-label="Sort Order">
+          <option value="newest">🕒 Newest First</option>
+          <option value="oldest">⏳ Oldest First</option>
+          <option value="title">🔤 Title (A–Z)</option>
+          <option value="photos">📷 Most Photos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dynamic Tag Cloud Bar -->
+    <div class="tags-cloud-bar" id="tagCloudBar"></div>
+
+    <!-- Quick Stats Overview Bar -->
+    <section class="stats-overview" aria-label="Collection Statistics">
+      <div class="stat-pill-card">
+        <div class="stat-icon-wrapper">📷</div>
+        <div class="stat-info">
+          <span class="stat-val" id="totalPhotos">0</span>
+          <span class="stat-lbl">Total Photos</span>
+        </div>
+      </div>
+
+      <div class="stat-pill-card">
+        <div class="stat-icon-wrapper">📁</div>
+        <div class="stat-info">
+          <span class="stat-val" id="totalAlbums">0</span>
+          <span class="stat-lbl">Albums</span>
+        </div>
+      </div>
+
+      <div class="stat-pill-card">
+        <div class="stat-icon-wrapper">🌍</div>
+        <div class="stat-info">
+          <span class="stat-val" id="totalPlaces">0</span>
+          <span class="stat-lbl">Places Visited</span>
+        </div>
+      </div>
+
+      <div class="stat-pill-card">
+        <div class="stat-icon-wrapper">💖</div>
+        <div class="stat-info">
+          <span class="stat-val" id="totalFavorites">0</span>
+          <span class="stat-lbl">Favorited</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: ALBUMS BENTO VIEW -->
+    <section class="album-section" id="albumsSection">
+      <div class="view-heading-row">
+        <div>
+          <h2>Your Photo Albums</h2>
+          <p id="albumCount">Loading albums...</p>
+        </div>
+      </div>
+      <div class="album-bento-grid" id="albumGrid"></div>
+    </section>
+
+    <!-- SECTION 2: DEDICATED ALBUM DETAIL VIEW -->
+    <section class="album-detail-container" id="albumDetailSection" hidden>
+      <div class="breadcrumb-bar">
+        <button type="button" class="breadcrumb-back-btn" id="backToAlbumsBtn">
+          <span>←</span> All Albums
+        </button>
+        <span style="color: var(--text-dim);">/</span>
+        <span id="breadcrumbAlbumTitle" style="font-weight: 600; color: var(--text);">Album</span>
+      </div>
+
+      <div class="album-hero-banner" id="albumHeroBanner">
+        <div class="album-hero-bg" id="albumHeroBg"></div>
+        <div class="album-hero-content">
+          <div class="album-hero-info">
+            <span class="category-pill" id="detailAlbumCategory">🌍 Place</span>
+            <h1 id="detailAlbumTitle">Album Title</h1>
+            <p class="album-hero-desc" id="detailAlbumDesc">Album description</p>
+            <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0.5rem;" id="detailAlbumMeta">0 photos</p>
+          </div>
+          <div class="album-hero-actions">
+            <button type="button" class="btn-primary" id="detailUploadPhotosBtn">+ Add Photos</button>
+            <button type="button" class="btn-secondary" id="detailEditAlbumBtn">Edit Album</button>
+            <button type="button" class="btn-danger" id="detailDeleteAlbumBtn">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view-heading-row">
+        <div>
+          <h2 id="detailPhotosHeading">Album Photos</h2>
+          <p id="detailPhotosCount">0 photos</p>
+        </div>
+      </div>
+      <div class="gallery-photos-grid" id="albumPhotosGrid"></div>
+    </section>
+
+    <!-- SECTION 3: ALL PHOTOS / GALLERY VIEW -->
+    <section class="gallery-section" id="gallerySection" hidden>
+      <div class="view-heading-row">
+        <div>
+          <h2 id="galleryHeading">All Photos</h2>
+          <p id="galleryCount">Loading photos...</p>
+        </div>
+      </div>
+      <div class="gallery-photos-grid" id="galleryGrid"></div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       MODALS
+       ========================================================================== -->
+
+  <!-- Modal 1: Create / Edit Album -->
+  <div class="modal-backdrop" id="albumModal" hidden>
+    <div class="modal-window">
+      <button type="button" class="modal-close-btn" id="closeAlbumModal" aria-label="Close modal">&times;</button>
+      <div class="modal-title-row">
+        <h2 id="albumModalTitle">Create Album</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Organize your memories into a dedicated collection.</p>
+      </div>
+
+      <form id="albumForm">
+        <input type="hidden" id="albumId" />
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="albumTitle">Album Title *</label>
+          <input type="text" id="albumTitle" class="form-input" placeholder="e.g., Swiss Alps Adventure 2026" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <label>Category</label>
+          <div class="category-radio-group" id="albumCategoryPicker">
+            <label class="category-radio-card">
+              <input type="radio" name="category" value="place" checked />
+              <span class="category-icon">🌍</span>
+              <span class="category-label">Place</span>
+            </label>
+            <label class="category-radio-card">
+              <input type="radio" name="category" value="person" />
+              <span class="category-icon">👤</span>
+              <span class="category-label">People</span>
+            </label>
+            <label class="category-radio-card">
+              <input type="radio" name="category" value="use" />
+              <span class="category-icon">✨</span>
+              <span class="category-label">Events</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="albumDescription">Description</label>
+          <textarea id="albumDescription" class="form-input" rows="3" placeholder="Add details or stories about this collection..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelAlbum">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveAlbumBtn">Save Album</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Multi-Photo Upload Modal -->
+  <div class="modal-backdrop" id="photoModal" hidden>
+    <div class="modal-window modal-wide">
+      <button type="button" class="modal-close-btn" id="closePhotoModal" aria-label="Close modal">&times;</button>
+      <div class="modal-title-row">
+        <h2 id="photoModalTitle">Add Photos</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Upload one or multiple photos to your collection.</p>
+      </div>
+
+      <form id="photoForm">
+        <input type="hidden" id="photoAlbumId" />
+
+        <!-- Album Selector (when opened from global gallery) -->
+        <div class="form-group" id="albumSelectGroup" style="margin-bottom: 1rem;">
+          <label for="photoAlbumSelect">Target Album *</label>
+          <select id="photoAlbumSelect" class="form-input" required></select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="photoTitle">Photo Title (applied to upload)</label>
+          <input type="text" id="photoTitle" class="form-input" placeholder="e.g., Golden Hour Horizon" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <label for="photoTags">Tags (comma separated)</label>
+          <input type="text" id="photoTags" class="form-input" placeholder="travel, mountains, summer, 2026" />
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="dropzone-container" id="dropZone">
+          <input type="file" id="photoFile" accept="image/*" multiple hidden />
+          <span class="dropzone-icon">📷</span>
+          <div class="dropzone-title">Drag & drop your photos here</div>
+          <div class="dropzone-subtitle">or <button type="button" id="browseBtn" style="color: var(--accent-1); text-decoration: underline; font-weight: 600;">browse files</button> (PNG, JPG, WebP up to 50MB)</div>
+        </div>
+
+        <!-- Multi-photo Thumbnails Preview Grid -->
+        <div class="batch-preview-grid" id="batchPreviewGrid" hidden></div>
+
+        <!-- Legacy single preview for backward compatibility -->
+        <div class="image-preview" id="imagePreview" hidden style="margin-top: 1rem; position: relative;">
+          <img id="previewImg" alt="Preview" style="max-height: 200px; border-radius: var(--radius-sm); width: 100%; object-fit: cover;" />
+          <button type="button" id="removeImage" class="batch-item-remove" style="top: 0.5rem; right: 0.5rem;">&times;</button>
+        </div>
+
+        <!-- Upload Progress Indicator -->
+        <div class="upload-progress-wrapper" id="uploadProgressWrapper" hidden>
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem;">
+            <span>Uploading images...</span>
+            <span id="uploadProgressText">0%</span>
+          </div>
+          <div class="upload-progress-bar">
+            <div class="upload-progress-fill" id="uploadProgressFill"></div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelPhoto">Cancel</button>
+          <button type="submit" class="btn-primary" id="uploadPhotoBtn">Upload Photo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Ultra Lightbox Viewer -->
+  <div class="lightbox-backdrop" id="viewModal" hidden>
+    <!-- Top Header -->
+    <div class="lightbox-header">
+      <div class="lightbox-title-meta">
+        <h3 id="viewerTitle">Photo Title</h3>
+        <p><span id="viewerAlbum">Album Name</span> • <span id="viewerDate">Date</span></p>
+      </div>
+
+      <div class="lightbox-top-actions">
+        <button type="button" class="btn-icon" id="zoomOutBtn" title="Zoom Out">−</button>
+        <button type="button" class="btn-icon" id="zoomResetBtn" title="Reset Zoom" style="font-size: 0.85rem; font-weight: 600;">100%</button>
+        <button type="button" class="btn-icon" id="zoomInBtn" title="Zoom In">+</button>
+        <button type="button" class="btn-icon" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+        <button type="button" class="btn-icon" id="closeViewModal" title="Close (Esc)">&times;</button>
+      </div>
+    </div>
+
+    <!-- Center Stage -->
+    <div class="lightbox-stage">
+      <button type="button" class="lightbox-nav-btn lightbox-prev" id="lightboxPrevBtn" title="Previous Photo (←)">‹</button>
+      <div class="lightbox-img-wrapper" id="lightboxImgWrapper">
+        <img id="viewerImage" class="lightbox-img" alt="Enlarged photo" />
+      </div>
+      <button type="button" class="lightbox-nav-btn lightbox-next" id="lightboxNextBtn" title="Next Photo (→)">›</button>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div class="lightbox-bottom-bar">
+      <div class="lightbox-tags-strip" id="viewerTags"></div>
+
+      <div class="lightbox-controls">
+        <button type="button" class="btn-secondary" id="favoritePhotoBtn">
+          <span id="favIcon">🤍</span> <span id="favText">Favorite</span>
+        </button>
+        <button type="button" class="btn-secondary" id="downloadPhotoBtn">
+          <span>⬇️</span> Download
+        </button>
+        <button type="button" class="btn-secondary" id="toggleDetailsBtn">
+          <span>ℹ️</span> Details
+        </button>
+        <button type="button" class="btn-danger" id="deletePhotoBtn">
+          <span>🗑️</span> Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- Side Metadata Drawer -->
+    <div class="lightbox-drawer" id="viewerDetailsDrawer" hidden>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h4>Photo Details</h4>
+        <button type="button" id="closeDrawerBtn" style="color: var(--text-dim); font-size: 1.4rem;">&times;</button>
+      </div>
+
+      <div class="drawer-field">
+        <label>Title</label>
+        <p id="drawerTitle">Photo Title</p>
+      </div>
+      <div class="drawer-field">
+        <label>Album</label>
+        <p id="drawerAlbum">Album Title</p>
+      </div>
+      <div class="drawer-field">
+        <label>Uploaded Date</label>
+        <p id="drawerDate">Sep 11, 2026</p>
+      </div>
+      <div class="drawer-field">
+        <label>File Dimensions & Size</label>
+        <p id="drawerDimensions">Loading...</p>
+      </div>
+      <div class="drawer-field">
+        <label>Tags</label>
+        <div id="drawerTags" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem;"></div>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="button" class="btn-secondary" id="editPhotoMetaBtn" style="width: 100%;">
+          ✏️ Edit Title & Tags
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Edit Photo Metadata Modal -->
+  <div class="modal-backdrop" id="editPhotoModal" hidden>
+    <div class="modal-window">
+      <button type="button" class="modal-close-btn" id="closeEditPhotoModal">&times;</button>
+      <div class="modal-title-row">
+        <h2>Edit Photo Info</h2>
+      </div>
+      <form id="editPhotoForm">
+        <input type="hidden" id="editPhotoAlbumId" />
+        <input type="hidden" id="editPhotoId" />
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="editPhotoTitle">Title</label>
+          <input type="text" id="editPhotoTitle" class="form-input" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="editPhotoTags">Tags (comma separated)</label>
+          <input type="text" id="editPhotoTags" class="form-input" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelEditPhoto">Cancel</button>
+          <button type="submit" class="btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Custom Confirmation Dialog -->
+  <div class="modal-backdrop" id="confirmModal" hidden>
+    <div class="modal-window" style="max-width: 440px;">
+      <div class="modal-title-row">
+        <h2 id="confirmModalTitle">Are you sure?</h2>
+        <p id="confirmModalMsg" style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.5rem;">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="cancelConfirmModal">Cancel</button>
+        <button type="button" class="btn-danger" id="confirmModalBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Firebase Web SDK & Config -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- App Auth & Logic -->
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

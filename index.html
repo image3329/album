@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Memory Album — Private Collection. Restricted to authorized members only." />
+  <title>Memory Album — Authorized Access</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-ambient-glow"></div>
+
+    <!-- Top Right Theme Switcher -->
+    <div style="position: absolute; top: 1.5rem; right: 1.5rem; z-index: 10;">
+      <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle theme">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </div>
+
+    <!-- Sign In Card (Sign-up Removed for Restricted Member Access) -->
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-brand-badge">🔒</div>
+        <h1>Memory Album</h1>
+        <p class="auth-subtitle">Private Sanctuary • Authorized Members Only</p>
+      </div>
+
+      <!-- Access Mode Notice Banner -->
+      <div style="background: var(--surface-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.82rem; color: var(--text-muted);">
+        <span style="font-size: 1.1rem;">🛡️</span>
+        <span>Public registration is disabled. Only pre-approved member accounts can sign in.</span>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="loginForm" class="auth-form" autocomplete="on">
+        <div class="form-group">
+          <label for="loginEmail">Member Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="loginEmail" class="form-input" placeholder="member@memoryalbum.com" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required autocomplete="current-password" />
+            <button type="button" class="input-eye-btn" id="toggleLoginPassword" aria-label="Show or hide password">👁️</button>
+          </div>
+        </div>
+
+        <p class="form-error" id="loginError" hidden></p>
+        <button type="submit" class="btn-primary" id="loginSubmit" style="width: 100%; margin-top: 0.5rem;">
+          Sign In to Collection
+        </button>
+      </form>
+
+      <div class="auth-footer" style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;">
+        Need access? Contact the album administrator to add your email to the authorized members list.
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Firebase Web SDK & Config -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- App Auth & Logic -->
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
