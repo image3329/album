@@ -972,34 +972,47 @@ function handleFileSelection(files) {
     }
   } else {
     // Multi preview grid
-    const previewGrid = document.getElementById('batchPreviewGrid');
-    if (previewGrid) {
-      previewGrid.hidden = false;
-      previewGrid.innerHTML = '';
-
-      validFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const item = document.createElement('div');
-          item.className = 'batch-item';
-          item.innerHTML = `
-            <img src="${e.target.result}" alt="Preview" />
-            <button type="button" class="batch-item-remove" data-index="${index}">&times;</button>
-          `;
-          previewGrid.appendChild(item);
-
-          item.querySelector('.batch-item-remove').addEventListener('click', () => {
-            batchFilesToUpload.splice(index, 1);
-            item.remove();
-            if (batchFilesToUpload.length === 0) {
-              previewGrid.hidden = true;
-            }
-          });
-        };
-        reader.readAsDataURL(file);
-      });
-    }
+    renderBatchPreviewGrid();
   }
+}
+
+function renderBatchPreviewGrid() {
+  const previewGrid = document.getElementById('batchPreviewGrid');
+  if (!previewGrid) return;
+
+  if (batchFilesToUpload.length === 0) {
+    previewGrid.hidden = true;
+    previewGrid.innerHTML = '';
+    return;
+  }
+
+  previewGrid.hidden = false;
+  previewGrid.innerHTML = '';
+
+  batchFilesToUpload.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const item = document.createElement('div');
+      item.className = 'batch-item';
+      item.innerHTML = `
+        <img src="${e.target.result}" alt="Preview" />
+        <button type="button" class="batch-item-remove" title="Remove">&times;</button>
+      `;
+      previewGrid.appendChild(item);
+
+      item.querySelector('.batch-item-remove').addEventListener('click', () => {
+        const currentPos = batchFilesToUpload.indexOf(file);
+        if (currentPos !== -1) {
+          batchFilesToUpload.splice(currentPos, 1);
+        }
+        item.remove();
+        if (batchFilesToUpload.length === 0) {
+          previewGrid.hidden = true;
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function fileToBase64(file) {
@@ -1033,11 +1046,17 @@ async function uploadPhotos() {
   }
 
   const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-  const hasFirebaseStorage = Boolean(window.FirebaseConfig && window.FirebaseConfig.hasStorage());
+  const hasFirebaseStorage = Boolean(
+    window.FirebaseConfig &&
+    typeof window.FirebaseConfig.hasStorage === 'function' &&
+    window.FirebaseConfig.hasStorage()
+  );
 
   try {
     if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...'; }
     if (progressWrapper) progressWrapper.hidden = false;
+    if (progressFill) progressFill.style.width = '15%';
+    if (progressText) progressText.textContent = 'Preparing upload...';
 
     if (batchFilesToUpload.length === 1) {
       // Single upload
@@ -1046,30 +1065,31 @@ async function uploadPhotos() {
 
       if (hasFirebaseStorage) {
         try {
-          if (progressText) progressText.textContent = 'Uploading to Firebase Storage...';
+          if (progressText) progressText.textContent = 'Uploading to Cloud Storage...';
           const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
             const displayPercent = Math.round(percent * 0.85);
             if (progressFill) progressFill.style.width = `${displayPercent}%`;
             if (progressText) progressText.textContent = `Cloud Upload ${displayPercent}%`;
-          });
+          }, 6000);
           photoPayload.imageUrl = uploadRes.url;
           photoPayload.url = uploadRes.url;
           photoPayload.filename = uploadRes.filename;
           photoPayload.sizeBytes = uploadRes.sizeBytes;
         } catch (storageErr) {
-          console.warn('Direct Firebase Storage upload encountered error, attempting fallback:', storageErr);
+          console.warn('Firebase Storage upload note, falling back to local server storage:', storageErr.message);
+          if (progressText) progressText.textContent = 'Saving directly to server...';
           const base64 = await fileToBase64(file);
           photoPayload.imageBase64 = base64;
         }
       } else {
         if (progressFill) progressFill.style.width = '50%';
-        if (progressText) progressText.textContent = '50%';
+        if (progressText) progressText.textContent = 'Encoding image...';
         const base64 = await fileToBase64(file);
         photoPayload.imageBase64 = base64;
       }
 
       if (progressFill) progressFill.style.width = '90%';
-      if (progressText) progressText.textContent = 'Saving photo...';
+      if (progressText) progressText.textContent = 'Saving photo to album...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos`, {
         method: 'POST',
@@ -1077,7 +1097,7 @@ async function uploadPhotos() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Upload failed');
       }
     } else {
@@ -1092,7 +1112,7 @@ async function uploadPhotos() {
 
         const basePercent = Math.round((i / totalFiles) * 85);
         if (progressFill) progressFill.style.width = `${basePercent}%`;
-        if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${basePercent}%)`;
+        if (progressText) progressText.textContent = `Processing ${i + 1}/${totalFiles}...`;
 
         if (hasFirebaseStorage) {
           try {
@@ -1101,13 +1121,13 @@ async function uploadPhotos() {
               const currentTotal = basePercent + fileContribution;
               if (progressFill) progressFill.style.width = `${currentTotal}%`;
               if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
-            });
+            }, 6000);
             itemPayload.imageUrl = uploadRes.url;
             itemPayload.url = uploadRes.url;
             itemPayload.filename = uploadRes.filename;
             itemPayload.sizeBytes = uploadRes.sizeBytes;
           } catch (storageErr) {
-            console.warn(`Direct upload failed for file ${file.name}, using base64 fallback:`, storageErr);
+            console.warn(`Cloud upload note for file ${file.name}, using local fallback:`, storageErr.message);
             const base64 = await fileToBase64(file);
             itemPayload.imageBase64 = base64;
           }
@@ -1120,7 +1140,7 @@ async function uploadPhotos() {
       }
 
       if (progressFill) progressFill.style.width = '92%';
-      if (progressText) progressText.textContent = 'Saving album photos...';
+      if (progressText) progressText.textContent = 'Saving photos to album...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos/batch`, {
         method: 'POST',
@@ -1128,15 +1148,15 @@ async function uploadPhotos() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Batch upload failed');
       }
     }
 
     if (progressFill) progressFill.style.width = '100%';
-    if (progressText) progressText.textContent = '100%';
+    if (progressText) progressText.textContent = 'Done!';
 
-    showToast('Photos stored in Firebase Storage successfully! 📸☁️', 'success');
+    showToast('Photos uploaded successfully! 📸', 'success');
     document.getElementById('photoModal').hidden = true;
     resetPhotoForm();
 
@@ -1148,11 +1168,12 @@ async function uploadPhotos() {
     console.error('Error uploading photos:', err);
     let msg = err.message || 'Upload failed';
     if (err.code === 'storage/unauthorized' || msg.includes('unauthorized') || msg.includes('permission-denied')) {
-      msg = 'Firebase Storage permission denied. Please check your Firebase Storage security rules in the Firebase console.';
+      msg = 'Firebase Storage permission denied. Please check your storage rules in the Firebase Console.';
     }
-    showToast(msg, 'error', 6000);
+    showToast(msg, 'error', 5000);
   } finally {
     if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Photo'; }
+    if (progressWrapper) progressWrapper.hidden = true;
   }
 }
 

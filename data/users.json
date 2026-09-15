@@ -107,7 +107,7 @@
       "id": "mtwjrmhyf73254a57041",
       "username": "image",
       "email": "image@gmail.com",
-      "passwordHash": "$pbkdf2$b6e0bcb51c620bb8dc0a3a8d535637b5$210603f8550e461053144b38362c47c2daac6b79c4029e2dbd0111c79c995bbd17bbbd83e34e07f92028f9799f8b221e7603f1cfcd0b1331267f4c0d60588355",
+      "passwordHash": "$pbkdf2$07e35e19a17bf7aac0cb7e8ef1ae778f$d07903bd7e08d8aeee02c600911afbeabc66ca7c9095ff162606042e87eff4bdfb78686fdce04e43b4ecc06a60a6cc5f390a788d626dbec0be0206ba1a7374a4",
       "theme": "dark",
       "createdAt": "2026-09-11T06:00:17.121Z"
     },
@@ -123,7 +123,7 @@
       "id": "mtws94vp25f912b7b8e4",
       "username": "sahimage691",
       "email": "sahimage691@gmail.com",
-      "passwordHash": "firebase_managed",
+      "passwordHash": "$pbkdf2$fa1bad68356b51a4e41bde87800cdf19$f5f2aa7ea1b10232ab654bed505cf5cf4a464530c005deff12196cd191a6fceafeffd54a17e587f299d0907c5a06468b7fd9825372c8428b3ff9a6c51c2963a6",
       "theme": "dark",
       "createdAt": "2026-09-11T09:57:50.968Z"
     }

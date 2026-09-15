@@ -33,6 +33,15 @@
       "createdAt": "2026-09-11T09:57:50.968Z",
       "expiresAt": "2026-10-11T10:19:38.109Z",
       "nonce": "00a1a4d8bc52"
+    },
+    "eyJpZCI6Im10d2pybWh5ZjczMjU0YTU3MDQxIiwidXNlcm5hbWUiOiJpbWFnZSIsImVtYWlsIjoiaW1hZ2VAZ21haWwuY29tIiwidGhlbWUiOiJkYXJrIiwiY3JlYXRlZEF0IjoiMjAyNi0wOS0xMVQwNjowMDoxNy4xMjFaIiwiZXhwaXJlc0F0IjoiMjAyNi0xMC0xNVQwNDozNzoyMy40MDBaIiwibm9uY2UiOiIxYjNjYzgzZjNiY2QifQ.pyhqsy8gGg2w7J4gols-vn_kU7KetJeWMRRmTeWBNUU": {
+      "id": "mtwjrmhyf73254a57041",
+      "username": "image",
+      "email": "image@gmail.com",
+      "theme": "dark",
+      "createdAt": "2026-09-11T06:00:17.121Z",
+      "expiresAt": "2026-10-15T04:37:23.400Z",
+      "nonce": "1b3cc83f3bcd"
     }
   }
 }

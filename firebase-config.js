@@ -3,8 +3,7 @@
 // ==========================================================================
 
 /**
- * 1. REPLACE THE PLACEHOLDERS BELOW WITH YOUR FIREBASE PROJECT CONFIG:
- *    You can find these in Firebase Console > Project Settings > General > Your Apps > Web App.
+ * 1. FIREBASE PROJECT CONFIG:
  */
 const firebaseConfig = {
   apiKey: "AIzaSyCXGXKpQYM0lkinbcG8xKyLnmjXFgD-si4",
@@ -20,14 +19,13 @@ const firebaseConfig = {
  * 2. WHITELIST OF AUTHORIZED MEMBERS:
  *    Only users with emails in this list are allowed to access the website.
  *    Anyone else will be automatically denied access and signed out.
- *    Add or remove emails here as needed (in lowercase).
  */
 const ALLOWED_MEMBERS = [
+  "image@gmail.com",
   "sahimage691@gmail.com",
   "supriya123@gmail.com",
   "niharika@gmail.com",
   "rijangurung@gmail.com"
-
 ];
 
 // Determine if Firebase is configured with real credentials or still has placeholders
@@ -74,7 +72,7 @@ function isMemberAllowed(email) {
   return ALLOWED_MEMBERS.map(m => m.toLowerCase()).includes(clean);
 }
 
-function waitForFirebaseAuth(timeoutMs = 3000) {
+function waitForFirebaseAuth(timeoutMs = 1500) {
   return new Promise(resolve => {
     if (!firebaseAuth) return resolve(null);
     if (firebaseAuth.currentUser) return resolve(firebaseAuth.currentUser);
@@ -96,30 +94,33 @@ function waitForFirebaseAuth(timeoutMs = 3000) {
   });
 }
 
+function isFirebaseUserSignedIn() {
+  return Boolean(firebaseAuth && firebaseAuth.currentUser);
+}
+
 /**
- * Upload an image file directly to Firebase Storage.
- * Returns a permanent, fast-loading HTTPS URL.
+ * Upload an image file directly to Firebase Storage with strict timeout and fallback.
+ * Returns a permanent HTTPS URL, or throws an error quickly so local fallback occurs.
  * @param {File} file 
  * @param {string} albumId 
  * @param {Function} [onProgress] Callback with percentage 0-100
+ * @param {number} [timeoutMs] Max time to wait before aborting to fallback (default 6000ms)
  * @returns {Promise<{ url: string, filename: string, sizeBytes: number }>}
  */
-async function uploadFileToStorage(file, albumId, onProgress) {
+async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 6000) {
   if (!firebaseStorage) {
     throw new Error('Firebase Storage is not initialized');
   }
 
-  await waitForFirebaseAuth();
+  await waitForFirebaseAuth(1000);
   const user = firebaseAuth?.currentUser;
-  let userPrefix = user ? user.uid : null;
-  if (!userPrefix) {
-    try {
-      const cached = JSON.parse(localStorage.getItem('memoryAlbumUser') || '{}');
-      userPrefix = cached.id || cached.uid;
-    } catch {}
-  }
-  userPrefix = userPrefix || 'member';
 
+  // If not authenticated in Firebase, reject immediately to allow fast local server upload
+  if (!user) {
+    throw new Error('No active Firebase user session: using local server storage fallback');
+  }
+
+  const userPrefix = user.uid || 'member';
   const timestamp = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const storagePath = `users/${userPrefix}/albums/${albumId || 'general'}/${timestamp}_${safeName}`;
@@ -137,28 +138,47 @@ async function uploadFileToStorage(file, albumId, onProgress) {
   const uploadTask = storageRef.put(file, metadata);
 
   return new Promise((resolve, reject) => {
+    let completed = false;
+
+    // Strict timeout guard to prevent UI freeze
+    const timer = setTimeout(() => {
+      if (!completed) {
+        completed = true;
+        try { uploadTask.cancel(); } catch {}
+        reject(new Error('Firebase Storage upload timed out; switching to local server storage.'));
+      }
+    }, timeoutMs);
+
     uploadTask.on(
       'state_changed',
       snapshot => {
-        if (typeof onProgress === 'function' && snapshot.totalBytes > 0) {
+        if (!completed && typeof onProgress === 'function' && snapshot.totalBytes > 0) {
           const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
           onProgress(percent);
         }
       },
       err => {
-        console.error('Firebase Storage upload error:', err);
-        reject(err);
+        if (!completed) {
+          completed = true;
+          clearTimeout(timer);
+          console.warn('Firebase Storage upload error (falling back to server storage):', err.message);
+          reject(err);
+        }
       },
       async () => {
-        try {
-          const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
-          resolve({
-            url: downloadUrl,
-            filename: safeName,
-            sizeBytes: file.size
-          });
-        } catch (urlErr) {
-          reject(urlErr);
+        if (!completed) {
+          completed = true;
+          clearTimeout(timer);
+          try {
+            const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+            resolve({
+              url: downloadUrl,
+              filename: safeName,
+              sizeBytes: file.size
+            });
+          } catch (urlErr) {
+            reject(urlErr);
+          }
         }
       }
     );
@@ -172,10 +192,11 @@ if (typeof window !== 'undefined') {
     isConfigured: isFirebaseConfigured,
     allowedMembers: ALLOWED_MEMBERS,
     isMemberAllowed,
+    isUserSignedIn: isFirebaseUserSignedIn,
     getApp: () => firebaseApp,
     getAuth: () => firebaseAuth,
     getStorage: () => firebaseStorage,
-    hasStorage: () => Boolean(firebaseStorage),
+    hasStorage: () => Boolean(firebaseStorage && firebaseAuth?.currentUser),
     uploadFileToStorage
   };
 }

@@ -994,6 +994,237 @@
       ],
       "createdAt": "2026-09-11T06:27:32.721Z",
       "updatedAt": "2026-09-11T06:27:32.738Z"
+    },
+    {
+      "id": "mu25qdt1813184de57bf",
+      "userId": "mtws94vp25f912b7b8e4",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mu25qdt66a71c522a8a6.png",
+      "photos": [
+        {
+          "id": "mu25qdt6e33a0567cdaa",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mu25qdt66a71c522a8a6.png",
+          "url": "/uploads/mu25qdt66a71c522a8a6.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-15T04:14:01.578Z",
+          "updatedAt": "2026-09-15T04:14:01.590Z"
+        },
+        {
+          "id": "mu25qdtb8258a785ffd0",
+          "title": "Cloud Stored Sunset Photo",
+          "description": "",
+          "filename": "test.jpg",
+          "url": "https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123",
+          "sizeBytes": 10240,
+          "tags": [
+            "firebase",
+            "cloud"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:14:01.583Z",
+          "updatedAt": "2026-09-15T04:14:01.583Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:14:01.573Z",
+      "updatedAt": "2026-09-15T04:14:01.590Z"
+    },
+    {
+      "id": "mu26h8jdd3c8815a245b",
+      "userId": "mtws94vp25f912b7b8e4",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mu26h8jj763b7ba29ff8.png",
+      "photos": [
+        {
+          "id": "mu26h8jk90effa73ace1",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mu26h8jj763b7ba29ff8.png",
+          "url": "/uploads/mu26h8jj763b7ba29ff8.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-15T04:34:54.463Z",
+          "updatedAt": "2026-09-15T04:34:54.475Z"
+        },
+        {
+          "id": "mu26h8jq42420950de78",
+          "title": "Cloud Stored Sunset Photo",
+          "description": "",
+          "filename": "test.jpg",
+          "url": "https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123",
+          "sizeBytes": 10240,
+          "tags": [
+            "firebase",
+            "cloud"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:34:54.470Z",
+          "updatedAt": "2026-09-15T04:34:54.470Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:34:54.457Z",
+      "updatedAt": "2026-09-15T04:34:54.475Z"
+    },
+    {
+      "id": "mu26kfgz577dd7414d9f",
+      "userId": "mtwjrmhyf73254a57041",
+      "title": "My Memories",
+      "category": "place",
+      "description": "Personal photo collection",
+      "cover": "/uploads/mu26kfh4a29f18a953bf.png",
+      "photos": [
+        {
+          "id": "mu26kfh51dde5e223ed0",
+          "title": "Sunset Beach",
+          "description": "",
+          "filename": "mu26kfh4a29f18a953bf.png",
+          "url": "/uploads/mu26kfh4a29f18a953bf.png",
+          "sizeBytes": 70,
+          "tags": [
+            "sunset",
+            "beach"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:37:23.416Z",
+          "updatedAt": "2026-09-15T04:37:23.416Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:37:23.411Z",
+      "updatedAt": "2026-09-15T04:37:23.416Z"
+    },
+    {
+      "id": "mu26ksp10eb7473a7da8",
+      "userId": "mtws94vp25f912b7b8e4",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mu26ksp5270fa69453e7.png",
+      "photos": [
+        {
+          "id": "mu26ksp64f222a2b7e5b",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mu26ksp5270fa69453e7.png",
+          "url": "/uploads/mu26ksp5270fa69453e7.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-15T04:37:40.553Z",
+          "updatedAt": "2026-09-15T04:37:40.564Z"
+        },
+        {
+          "id": "mu26kspb767c50f79b4b",
+          "title": "Cloud Stored Sunset Photo",
+          "description": "",
+          "filename": "test.jpg",
+          "url": "https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123",
+          "sizeBytes": 10240,
+          "tags": [
+            "firebase",
+            "cloud"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:37:40.559Z",
+          "updatedAt": "2026-09-15T04:37:40.559Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:37:40.549Z",
+      "updatedAt": "2026-09-15T04:37:40.564Z"
+    },
+    {
+      "id": "mu26qjhqfd3b8e37803a",
+      "userId": "mtws94vp25f912b7b8e4",
+      "title": "Private Family Archive",
+      "category": "place",
+      "description": "Confidential private memories for family members only",
+      "cover": "/uploads/mu26qk0g6716588714e7.png",
+      "photos": [
+        {
+          "id": "mu26qk0h6f669569a3b8",
+          "title": "Family Gathering Panorama",
+          "description": "",
+          "filename": "mu26qk0g6716588714e7.png",
+          "url": "/uploads/mu26qk0g6716588714e7.png",
+          "sizeBytes": 70,
+          "tags": [
+            "family",
+            "private",
+            "archive"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:42:09.232Z",
+          "updatedAt": "2026-09-15T04:42:09.232Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:42:08.558Z",
+      "updatedAt": "2026-09-15T04:42:09.232Z"
+    },
+    {
+      "id": "mu26qvuvb69f1c97a4b7",
+      "userId": "mtws94vp25f912b7b8e4",
+      "title": "Private Dolomites Expedition",
+      "category": "place",
+      "description": "Private collection for authorized members only",
+      "cover": "/uploads/mu26qvv0499f3bd63397.png",
+      "photos": [
+        {
+          "id": "mu26qvv190362af613e5",
+          "title": "Alpine Vista at Sunset (Starred)",
+          "description": "Sunset over mountain ridge",
+          "filename": "mu26qvv0499f3bd63397.png",
+          "url": "/uploads/mu26qvv0499f3bd63397.png",
+          "sizeBytes": 70,
+          "tags": [
+            "dolomites",
+            "sunset",
+            "favorite",
+            "private"
+          ],
+          "isFavorite": true,
+          "createdAt": "2026-09-15T04:42:24.588Z",
+          "updatedAt": "2026-09-15T04:42:24.599Z"
+        },
+        {
+          "id": "mu26qvv65d4769c8ff59",
+          "title": "Cloud Stored Sunset Photo",
+          "description": "",
+          "filename": "test.jpg",
+          "url": "https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123",
+          "sizeBytes": 10240,
+          "tags": [
+            "firebase",
+            "cloud"
+          ],
+          "isFavorite": false,
+          "createdAt": "2026-09-15T04:42:24.594Z",
+          "updatedAt": "2026-09-15T04:42:24.594Z"
+        }
+      ],
+      "createdAt": "2026-09-15T04:42:24.583Z",
+      "updatedAt": "2026-09-15T04:42:24.599Z"
     }
   ]
 }

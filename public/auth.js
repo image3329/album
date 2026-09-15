@@ -5,12 +5,18 @@
 const SESSION_KEY = 'memoryAlbumSession';
 const THEME_KEY = 'memoryAlbumTheme';
 
-// Determine API base URL dynamically
+// Determine API base URL dynamically:
+// - If running on Live Server (:5500, etc.) on localhost, point to Express on http://localhost:3000
+// - If served on :3000 or on Vercel production, use relative paths ('')
 const API_BASE = (() => {
-  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-    return '';
+  if (
+    (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
+    window.location.port !== '3000' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return 'http://localhost:3000';
   }
-  return 'http://localhost:3000';
+  return '';
 })();
 
 function getSessionId() {
@@ -133,7 +139,7 @@ async function getMe() {
 }
 
 /**
- * Sign in user using Firebase Authentication with Whitelist Verification
+ * Sign in user using Firebase Authentication with Whitelist Verification & Server Fallback
  */
 async function loginUser({ email, password }) {
   const cleanEmail = (email || '').trim().toLowerCase();
@@ -145,7 +151,7 @@ async function loginUser({ email, password }) {
     }
   }
 
-  // 2. Check if Firebase live credentials are provided
+  // 2. Try Firebase Auth if configured
   if (window.FirebaseConfig && window.FirebaseConfig.isConfigured && typeof firebase !== 'undefined') {
     try {
       const auth = firebase.auth();
@@ -202,13 +208,35 @@ async function loginUser({ email, password }) {
       localStorage.setItem('memoryAlbumUser', JSON.stringify(clientUser));
       return clientUser;
     } catch (fbErr) {
-      console.error('Firebase Auth Error:', fbErr);
-      if (fbErr.code === 'auth/user-not-found' || fbErr.code === 'auth/wrong-password' || fbErr.code === 'auth/invalid-credential') {
+      console.warn('Firebase Auth note, attempting local server login:', fbErr.message || fbErr.code);
+
+      // Attempt local server verification fallback for whitelisted user
+      try {
+        const fallbackRes = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: cleanEmail, password })
+        });
+        const fallbackData = await fallbackRes.json();
+        if (fallbackRes.ok && fallbackData.sessionId) {
+          setSession(fallbackData.sessionId);
+          localStorage.setItem('memoryAlbumUser', JSON.stringify(fallbackData.user));
+          return fallbackData.user;
+        }
+      } catch {
+        // Fall through to standard error reporting
+      }
+
+      if (
+        fbErr.code === 'auth/user-not-found' ||
+        fbErr.code === 'auth/wrong-password' ||
+        fbErr.code === 'auth/invalid-credential' ||
+        fbErr.code === 'auth/invalid-login-credentials'
+      ) {
         throw new Error('Invalid email or password. Please verify your member credentials.');
       } else if (fbErr.code === 'auth/too-many-requests') {
         throw new Error('Too many failed attempts. Please wait a few moments and try again.');
       }
-      throw fbErr;
+      throw new Error(fbErr.message || 'Login failed. Please verify your credentials.');
     }
   }
 

@@ -248,6 +248,7 @@ function getAllowedMembers() {
     console.error('Error reading allowed members from firebase-config.js:', err);
   }
   return [
+    'image@gmail.com',
     'sahimage691@gmail.com',
     'supriya123@gmail.com',
     'niharika@gmail.com',
@@ -334,7 +335,7 @@ app.use(express.urlencoded({ extended: true, limit: '60mb' }));
 // Ensures routes match whether req.url starts with /api/... or /auth/..., /albums/..., etc.
 app.use((req, res, next) => {
   const apiPrefixes = ['/auth', '/albums', '/favorites', '/tags', '/stats', '/search'];
-  if (!req.url.startsWith('/api') && apiPrefixes.some(p => req.url.startsWith(p))) {
+  if (!req.url.startsWith('/api') && !req.path.includes('.') && apiPrefixes.some(p => req.url === p || req.url.startsWith(p + '/'))) {
     req.url = '/api' + req.url;
   }
   next();

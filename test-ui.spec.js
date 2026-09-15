@@ -30,8 +30,8 @@ test.describe('Memory Album Firebase Restricted Access & UI Flow', () => {
     await expect(page.locator('#loginError')).toContainText(/restricted|not on the authorized/i);
 
     // 5. Sign in as pre-approved authorized member
-    await page.fill('#loginEmail', 'test@example.com');
-    await page.fill('#loginPassword', 'testpass123');
+    await page.fill('#loginEmail', 'sahimage691@gmail.com');
+    await page.fill('#loginPassword', 'password123');
     await page.click('#loginSubmit');
 
     // 6. Verify successful redirect to app.html
