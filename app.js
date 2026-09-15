@@ -889,7 +889,7 @@ async function deleteAlbum(albumId) {
 // ==========================================================================
 let batchFilesToUpload = [];
 
-function openPhotoModal(targetAlbumId = null) {
+async function openPhotoModal(targetAlbumId = null) {
   const modal = document.getElementById('photoModal');
   const albumSelect = document.getElementById('photoAlbumSelect');
   const albumSelectGroup = document.getElementById('albumSelectGroup');
@@ -899,20 +899,44 @@ function openPhotoModal(targetAlbumId = null) {
 
   resetPhotoForm();
 
+  // If albums cache is empty, eagerly fetch from API before giving up
+  if (!userAlbumsCache || userAlbumsCache.length === 0) {
+    try {
+      const res = await window.MemoryAlbumAuth.apiFetch('/api/albums');
+      if (res.ok) {
+        const data = await res.json();
+        userAlbumsCache = data.albums || [];
+      }
+    } catch (e) {
+      console.warn('Could not fetch albums for modal:', e);
+    }
+  }
+
   // Populate album select options
   if (albumSelect) {
-    albumSelect.innerHTML = userAlbumsCache.map(a =>
-      `<option value="${a.id}" ${targetAlbumId === a.id ? 'selected' : ''}>${escapeHtml(a.title)} (${escapeHtml(a.category)})</option>`
-    ).join('');
-
     if (userAlbumsCache.length === 0) {
       showToast('Please create an album first before uploading photos.', 'warning');
       openAlbumModal();
       return;
     }
+
+    albumSelect.innerHTML = userAlbumsCache.map(a =>
+      `<option value="${a.id}">${escapeHtml(a.title)} (${escapeHtml(a.category)})</option>`
+    ).join('');
+
+    // Ensure the select element actually reflects targetAlbumId or first album
+    if (targetAlbumId && userAlbumsCache.some(a => a.id === targetAlbumId)) {
+      albumSelect.value = targetAlbumId;
+    } else if (userAlbumsCache[0]) {
+      albumSelect.value = userAlbumsCache[0].id;
+    }
+
+    albumSelect.onchange = () => {
+      if (photoAlbumIdInput) photoAlbumIdInput.value = albumSelect.value;
+    };
   }
 
-  const selectedAlbum = targetAlbumId || (userAlbumsCache[0] ? userAlbumsCache[0].id : '');
+  const selectedAlbum = (albumSelect && albumSelect.value) ? albumSelect.value : (targetAlbumId || (userAlbumsCache[0] ? userAlbumsCache[0].id : ''));
   if (photoAlbumIdInput) photoAlbumIdInput.value = selectedAlbum;
 
   modal.hidden = false;

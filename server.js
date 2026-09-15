@@ -175,11 +175,16 @@ function getSession(sessionId) {
   if (sessionId.startsWith('fb_')) {
     const uid = sessionId.replace('fb_', '');
     const data = readUsers();
-    const existing = data.users.find(u => u.id === uid) || data.users[0];
-    return existing || {
+    const existing = data.users.find(u => u.id === uid || (u.firebaseUid && u.firebaseUid === uid));
+    if (existing) return existing;
+
+    const authorizedUser = data.users.find(u => isMemberAllowed(u.email));
+    if (authorizedUser) return authorizedUser;
+
+    return {
       id: uid,
       username: 'Member',
-      email: null,
+      email: 'member@memoryalbum.com',
       theme: 'dark'
     };
   }
@@ -272,11 +277,12 @@ function requireAuth(req, res, next) {
   if (!session && sessionId && sessionId.startsWith('fb_')) {
     const cleanUid = sessionId.replace('fb_', '');
     const data = readUsers();
-    const existing = data.users.find(u => u.id === cleanUid) || data.users[0];
+    const existing = data.users.find(u => u.id === cleanUid || (u.firebaseUid && u.firebaseUid === cleanUid)) ||
+                     data.users.find(u => isMemberAllowed(u.email));
     session = existing || {
       id: cleanUid,
       username: 'Member',
-      email: null,
+      email: 'member@memoryalbum.com',
       theme: 'dark'
     };
   }
@@ -298,14 +304,28 @@ function requireAuth(req, res, next) {
 
 // Image processing helper
 function saveBase64Image(base64String) {
-  const matches = base64String.match(/^data:image\/([\w+]+);base64,(.+)$/);
+  const matches = base64String.match(/^data:image\/([a-zA-Z0-9+.-]+).*?;base64,(.+)$/s);
   if (!matches) {
+    if (/^[A-Za-z0-9+/=]+$/.test(base64String.trim())) {
+      const buffer = Buffer.from(base64String.trim(), 'base64');
+      const filename = `${generateId()}.jpg`;
+      const filepath = path.join(UPLOADS_DIR, filename);
+      fs.writeFileSync(filepath, buffer);
+      return {
+        filename,
+        url: `/uploads/${filename}`,
+        sizeBytes: buffer.length
+      };
+    }
     throw new Error('Invalid image format: must be valid base64 image data URL');
   }
 
   let ext = matches[1].toLowerCase();
   if (ext === 'jpeg') ext = 'jpg';
   if (ext.includes('svg')) ext = 'svg';
+  if (ext.includes('png')) ext = 'png';
+  if (ext.includes('webp')) ext = 'webp';
+  if (ext.includes('gif')) ext = 'gif';
 
   const base64Data = matches[2];
   const buffer = Buffer.from(base64Data, 'base64');
@@ -579,9 +599,13 @@ app.put('/api/auth/profile', requireAuth, (req, res) => {
 
 // Get all albums with filter and sort
 app.get('/api/albums', requireAuth, (req, res) => {
-  const { category, search, sort = 'newest' } = req.query;
+  const { category, search, sort = 'newest', mine } = req.query;
   const data = readAlbums();
-  let userAlbums = data.albums.filter(a => a.userId === req.user.id);
+  let userAlbums = [...data.albums];
+
+  if (mine === 'true') {
+    userAlbums = userAlbums.filter(a => a.userId === req.user.id);
+  }
 
   if (category && category !== 'all') {
     userAlbums = userAlbums.filter(a => a.category === category);
@@ -619,7 +643,7 @@ app.get('/api/albums', requireAuth, (req, res) => {
 // Get single album with full details
 app.get('/api/albums/:id', requireAuth, (req, res) => {
   const data = readAlbums();
-  const album = data.albums.find(a => a.id === req.params.id && a.userId === req.user.id);
+  const album = data.albums.find(a => a.id === req.params.id);
   if (!album) return res.status(404).json({ error: 'Album not found' });
   res.json({ album });
 });
@@ -637,6 +661,7 @@ app.post('/api/albums', requireAuth, (req, res) => {
   const album = {
     id: generateId(),
     userId: req.user.id,
+    creatorName: req.user.username || req.user.email || 'Member',
     title: title.trim(),
     category: category.trim(),
     description: (description || '').trim(),
@@ -655,7 +680,7 @@ app.post('/api/albums', requireAuth, (req, res) => {
 // Update album
 app.put('/api/albums/:id', requireAuth, (req, res) => {
   const data = readAlbums();
-  const index = data.albums.findIndex(a => a.id === req.params.id && a.userId === req.user.id);
+  const index = data.albums.findIndex(a => a.id === req.params.id);
 
   if (index === -1) return res.status(404).json({ error: 'Album not found' });
 
@@ -677,7 +702,7 @@ app.put('/api/albums/:id', requireAuth, (req, res) => {
 app.put('/api/albums/:id/cover', requireAuth, (req, res) => {
   const { coverUrl } = req.body;
   const data = readAlbums();
-  const album = data.albums.find(a => a.id === req.params.id && a.userId === req.user.id);
+  const album = data.albums.find(a => a.id === req.params.id);
 
   if (!album) return res.status(404).json({ error: 'Album not found' });
 
@@ -691,7 +716,7 @@ app.put('/api/albums/:id/cover', requireAuth, (req, res) => {
 // Delete album
 app.delete('/api/albums/:id', requireAuth, (req, res) => {
   const data = readAlbums();
-  const index = data.albums.findIndex(a => a.id === req.params.id && a.userId === req.user.id);
+  const index = data.albums.findIndex(a => a.id === req.params.id);
 
   if (index === -1) return res.status(404).json({ error: 'Album not found' });
 
@@ -725,7 +750,7 @@ app.post('/api/albums/:id/photos', requireAuth, (req, res) => {
   }
 
   const data = readAlbums();
-  const albumIndex = data.albums.findIndex(a => a.id === albumId && a.userId === req.user.id);
+  const albumIndex = data.albums.findIndex(a => a.id === albumId);
 
   if (albumIndex === -1) return res.status(404).json({ error: 'Album not found' });
 
@@ -745,6 +770,8 @@ app.post('/api/albums/:id/photos', requireAuth, (req, res) => {
 
     const photo = {
       id: generateId(),
+      uploaderId: req.user.id,
+      uploaderName: req.user.username || req.user.email || 'Member',
       title: (title || 'Untitled').trim(),
       description: (description || '').trim(),
       filename: photoFilename,
@@ -785,7 +812,7 @@ app.post('/api/albums/:id/photos/batch', requireAuth, (req, res) => {
   }
 
   const data = readAlbums();
-  const albumIndex = data.albums.findIndex(a => a.id === albumId && a.userId === req.user.id);
+  const albumIndex = data.albums.findIndex(a => a.id === albumId);
 
   if (albumIndex === -1) return res.status(404).json({ error: 'Album not found' });
 
@@ -810,6 +837,8 @@ app.post('/api/albums/:id/photos/batch', requireAuth, (req, res) => {
 
       const photo = {
         id: generateId(),
+        uploaderId: req.user.id,
+        uploaderName: req.user.username || req.user.email || 'Member',
         title: (item.title || 'Untitled').trim(),
         description: (item.description || '').trim(),
         filename: photoFilename,
@@ -842,7 +871,7 @@ app.post('/api/albums/:id/photos/batch', requireAuth, (req, res) => {
 app.put('/api/albums/:albumId/photos/:photoId', requireAuth, (req, res) => {
   const { title, tags, description, isFavorite } = req.body;
   const data = readAlbums();
-  const album = data.albums.find(a => a.id === req.params.albumId && a.userId === req.user.id);
+  const album = data.albums.find(a => a.id === req.params.albumId);
 
   if (!album) return res.status(404).json({ error: 'Album not found' });
 
@@ -865,7 +894,7 @@ app.put('/api/albums/:albumId/photos/:photoId', requireAuth, (req, res) => {
 // Delete single photo
 app.delete('/api/albums/:albumId/photos/:photoId', requireAuth, (req, res) => {
   const data = readAlbums();
-  const albumIndex = data.albums.findIndex(a => a.id === req.params.albumId && a.userId === req.user.id);
+  const albumIndex = data.albums.findIndex(a => a.id === req.params.albumId);
 
   if (albumIndex === -1) return res.status(404).json({ error: 'Album not found' });
 
@@ -897,10 +926,9 @@ app.delete('/api/albums/:albumId/photos/:photoId', requireAuth, (req, res) => {
 // Get all favorited photos across albums
 app.get('/api/favorites', requireAuth, (req, res) => {
   const data = readAlbums();
-  const userAlbums = data.albums.filter(a => a.userId === req.user.id);
   const favoritePhotos = [];
 
-  userAlbums.forEach(album => {
+  data.albums.forEach(album => {
     (album.photos || []).forEach(photo => {
       if (photo.isFavorite) {
         favoritePhotos.push({
@@ -913,16 +941,18 @@ app.get('/api/favorites', requireAuth, (req, res) => {
     });
   });
 
+  // Sort newest first
+  favoritePhotos.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
   res.json({ photos: favoritePhotos });
 });
 
 // Get user tag cloud
 app.get('/api/tags', requireAuth, (req, res) => {
   const data = readAlbums();
-  const userAlbums = data.albums.filter(a => a.userId === req.user.id);
   const tagCounts = {};
 
-  userAlbums.forEach(album => {
+  data.albums.forEach(album => {
     (album.photos || []).forEach(photo => {
       (photo.tags || []).forEach(tag => {
         const clean = tag.toLowerCase().trim();
@@ -943,13 +973,12 @@ app.get('/api/tags', requireAuth, (req, res) => {
 // Get detailed stats
 app.get('/api/stats', requireAuth, (req, res) => {
   const data = readAlbums();
-  const userAlbums = data.albums.filter(a => a.userId === req.user.id);
 
   let totalPhotos = 0;
   let totalFavorites = 0;
   let totalStorageBytes = 0;
 
-  userAlbums.forEach(album => {
+  data.albums.forEach(album => {
     (album.photos || []).forEach(photo => {
       totalPhotos++;
       if (photo.isFavorite) totalFavorites++;
@@ -957,10 +986,10 @@ app.get('/api/stats', requireAuth, (req, res) => {
     });
   });
 
-  const totalAlbums = userAlbums.length;
-  const placesCount = userAlbums.filter(a => a.category === 'place').length;
-  const peopleCount = userAlbums.filter(a => a.category === 'person').length;
-  const usesCount = userAlbums.filter(a => a.category === 'use').length;
+  const totalAlbums = data.albums.length;
+  const placesCount = data.albums.filter(a => a.category === 'place').length;
+  const peopleCount = data.albums.filter(a => a.category === 'person').length;
+  const usesCount = data.albums.filter(a => a.category === 'use').length;
 
   res.json({
     totalPhotos,
@@ -977,7 +1006,7 @@ app.get('/api/stats', requireAuth, (req, res) => {
 app.get('/api/search', requireAuth, (req, res) => {
   const { q, category, tag, favorite, sort = 'newest' } = req.query;
   const data = readAlbums();
-  let userAlbums = data.albums.filter(a => a.userId === req.user.id);
+  let userAlbums = [...data.albums];
 
   if (category && category !== 'all') {
     userAlbums = userAlbums.filter(a => a.category === category);
@@ -991,9 +1020,9 @@ app.get('/api/search', requireAuth, (req, res) => {
     );
   }
 
-  // Search photos across all matching user albums
+  // Search photos across all matching albums
   let photos = [];
-  data.albums.filter(a => a.userId === req.user.id).forEach(album => {
+  data.albums.forEach(album => {
     if (category && category !== 'all' && album.category !== category) return;
 
     (album.photos || []).forEach(photo => {
