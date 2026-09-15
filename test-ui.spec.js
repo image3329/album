@@ -96,6 +96,18 @@ test.describe('Memory Album Firebase Restricted Access & UI Flow', () => {
     await page.click('#closeViewModal');
     await expect(page.locator('#viewModal')).toBeHidden();
 
+    // 11b. Clean up test album so user collection is never polluted
+    await page.evaluate(async () => {
+      const res = await window.MemoryAlbumAuth.apiFetch('/api/albums');
+      if (res.ok) {
+        const data = await res.json();
+        const albums = (data.albums || []).filter(a => a.title === 'Private Family Archive');
+        for (const a of albums) {
+          await window.MemoryAlbumAuth.apiFetch(`/api/albums/${a.id}`, { method: 'DELETE' });
+        }
+      }
+    });
+
     // 12. Sign Out
     await page.click('#userBadgeBtn');
     await page.click('#logoutBtn');

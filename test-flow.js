@@ -206,6 +206,17 @@ async function testFlow() {
     assert(false, `Search: error - ${e.message}`);
   }
 
+  // 10b. Clean up test album so user database is never polluted
+  console.log('\n10b. Cleaning up test album...');
+  try {
+    if (createdAlbumId) {
+      const del = await apiRequest('DELETE', `/api/albums/${createdAlbumId}`, null, { 'x-session-id': sessionId });
+      assert(del.statusCode === 200, 'Clean up test album: deleted successfully');
+    }
+  } catch (e) {
+    console.warn('Could not clean up test album:', e.message);
+  }
+
   // 11. Logout
   console.log('\n11. Logging out...');
   try {
