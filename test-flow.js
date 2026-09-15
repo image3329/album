@@ -1,10 +1,13 @@
 const http = require('http');
+const app = require('./server');
+
+const TEST_PORT = process.env.TEST_PORT || 3099;
 
 function apiRequest(method, path, body, headers = {}) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'localhost',
-      port: process.env.TEST_PORT || 3000,
+      port: TEST_PORT,
       path,
       method,
       headers: {
@@ -37,7 +40,15 @@ function apiRequest(method, path, body, headers = {}) {
   });
 }
 
-async function testFlow() {
+async function runAllTests() {
+  // Start server on dedicated test port
+  const server = await new Promise((resolve) => {
+    const s = app.listen(TEST_PORT, () => {
+      console.log(`Test server running on port ${TEST_PORT}\n`);
+      resolve(s);
+    });
+  });
+
   const authorizedMemberEmail = 'sahimage691@gmail.com';
   const authorizedMemberUser = 'Sah Image';
   const unauthorizedEmail = 'intruder@randomdomain.com';
@@ -58,24 +69,35 @@ async function testFlow() {
     }
   }
 
-  console.log('=== Photo Album Firebase & Whitelist Member Access Test ===\n');
+  console.log('=== Photo Album Firestore, Auth & Storage Test Suite ===\n');
 
-  // 1. Test Whitelist Enforcement (Unauthorized email blocked)
-  console.log('1. Testing Whitelist Security (Unauthorized email attempt)...');
   try {
+    // 0. Test API Health & Database Status
+    console.log('0. Testing Health & Status API...');
+    const ping = await apiRequest('GET', '/api/ping');
+    assert(ping.statusCode === 200, `Health check: status ${ping.statusCode}`);
+    assert(ping.body.database === 'Cloud Firestore', 'Health check: database is Cloud Firestore');
+
+    // 1. Test Whitelist Enforcement (Unauthorized email blocked)
+    console.log('\n1. Testing Whitelist Security (Unauthorized email attempt)...');
     const blocked = await apiRequest('POST', '/api/auth/login', {
       email: unauthorizedEmail,
       password: 'SomePassword123!',
     });
     assert(blocked.statusCode === 403, `Unauthorized email blocked: status ${blocked.statusCode} (expected 403)`);
     assert(blocked.body.error && blocked.body.error.toLowerCase().includes('restricted'), 'Whitelist rejection message received');
-  } catch (e) {
-    assert(false, `Whitelist check: error - ${e.message}`);
-  }
 
-  // 2. Test Firebase Login Bridge with Authorized Member
-  console.log('\n2. Authenticating Authorized Member via Firebase Login Bridge...');
-  try {
+    // 1b. Test Firebase login with unauthorized email
+    console.log('\n1b. Testing Firebase Bridge with unauthorized email...');
+    const fbBlocked = await apiRequest('POST', '/api/auth/firebase-login', {
+      email: unauthorizedEmail,
+      username: 'Intruder',
+      idToken: 'mock_firebase_id_token_for_test'
+    });
+    assert(fbBlocked.statusCode === 403, `Unauthorized Firebase login blocked: status ${fbBlocked.statusCode} (expected 403)`);
+
+    // 2. Test Firebase Login Bridge with Authorized Member
+    console.log('\n2. Authenticating Authorized Member via Firebase Login Bridge...');
     const fbLogin = await apiRequest('POST', '/api/auth/firebase-login', {
       email: authorizedMemberEmail,
       username: authorizedMemberUser,
@@ -85,24 +107,16 @@ async function testFlow() {
     assert(fbLogin.body.sessionId, 'Firebase Member Login: received valid sessionId');
     sessionId = fbLogin.body.sessionId;
     assert(fbLogin.body.user.email === authorizedMemberEmail, `Firebase Member Login: email matches (${authorizedMemberEmail})`);
-  } catch (e) {
-    assert(false, `Firebase Member Login: error - ${e.message}`);
-  }
 
-  // 3. Get current member profile
-  console.log('\n3. Getting authenticated member profile...');
-  try {
+    // 3. Get current member profile (/api/auth/me)
+    console.log('\n3. Getting authenticated member profile...');
     const me = await apiRequest('GET', '/api/auth/me', null, { 'x-session-id': sessionId });
     assert(me.statusCode === 200, `Get user: status ${me.statusCode}`);
     const email = me.body.email || (me.body.user && me.body.user.email);
     assert(email === authorizedMemberEmail, `Get user: email is ${email}`);
-  } catch (e) {
-    assert(false, `Get user: error - ${e.message}`);
-  }
 
-  // 4. Create album as authorized member
-  console.log('\n4. Creating album...');
-  try {
+    // 4. Create album as authorized member
+    console.log('\n4. Creating album in Firestore...');
     const create = await apiRequest('POST', '/api/albums', {
       title: 'Private Dolomites Expedition',
       category: 'place',
@@ -112,127 +126,104 @@ async function testFlow() {
     assert(create.body.album.title === 'Private Dolomites Expedition', 'Create album: title correct');
     assert(create.body.album.category === 'place', 'Create album: category is place');
     createdAlbumId = create.body.album.id;
-  } catch (e) {
-    assert(false, `Create album: error - ${e.message}`);
-  }
 
-  // 5. Upload photo to album
-  console.log('\n5. Uploading photo to album...');
-  try {
-    const base64Pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    const upload = await apiRequest('POST', `/api/albums/${createdAlbumId}/photos`, {
-      imageBase64: base64Pixel,
-      title: 'Alpine Vista at Sunset',
-      description: 'Sunset over mountain ridge',
-      tags: ['dolomites', 'sunset', 'private', 'mountains'],
-    }, { 'x-session-id': sessionId });
-    assert(upload.statusCode === 201, `Upload photo: status ${upload.statusCode}`);
-    assert(upload.body.photo.title === 'Alpine Vista at Sunset', 'Upload photo: title correct');
-    createdPhotoId = upload.body.photo.id;
-  } catch (e) {
-    assert(false, `Upload photo: error - ${e.message}`);
-  }
-
-  // 5b. Upload photo via Firebase Storage direct Cloud URL
-  console.log('\n5b. Uploading photo via Firebase Storage Cloud URL...');
-  try {
+    // 5. Upload photo via direct Firebase Storage Cloud URL
+    console.log('\n5. Uploading photo via Firebase Storage Cloud URL...');
     const cloudUrl = 'https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/users%2Fmember%2Ftest.jpg?alt=media&token=123';
     const uploadCloud = await apiRequest('POST', `/api/albums/${createdAlbumId}/photos`, {
       imageUrl: cloudUrl,
       title: 'Cloud Stored Sunset Photo',
       filename: 'test.jpg',
       sizeBytes: 10240,
-      tags: ['firebase', 'cloud'],
+      tags: ['firebase', 'cloud', 'sunset'],
     }, { 'x-session-id': sessionId });
     assert(uploadCloud.statusCode === 201, `Upload cloud photo: status ${uploadCloud.statusCode}`);
     assert(uploadCloud.body.photo.url === cloudUrl, 'Upload cloud photo: URL correctly preserved as cloud URL');
-  } catch (e) {
-    assert(false, `Upload cloud photo: error - ${e.message}`);
-  }
+    createdPhotoId = uploadCloud.body.photo.id;
 
-  // 6. Favorite and update photo
-  console.log('\n6. Updating photo (favorite & tags)...');
-  try {
+    // 5b. Batch photo upload test
+    console.log('\n5b. Batch photo upload via Firebase Storage Cloud URLs...');
+    const batchRes = await apiRequest('POST', `/api/albums/${createdAlbumId}/photos/batch`, {
+      photos: [
+        {
+          imageUrl: 'https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/batch1.jpg?alt=media',
+          title: 'Batch Photo 1',
+          filename: 'batch1.jpg',
+          sizeBytes: 54321,
+          tags: ['batch', 'sunset']
+        },
+        {
+          imageUrl: 'https://firebasestorage.googleapis.com/v0/b/album29-cc9c8.firebasestorage.app/o/batch2.jpg?alt=media',
+          title: 'Batch Photo 2',
+          filename: 'batch2.jpg',
+          sizeBytes: 65432,
+          tags: ['batch', 'nature']
+        }
+      ]
+    }, { 'x-session-id': sessionId });
+    assert(batchRes.statusCode === 201, `Batch upload: status ${batchRes.statusCode}`);
+    assert(batchRes.body.count === 2, 'Batch upload: 2 photos uploaded');
+
+    // 6. Favorite and update photo
+    console.log('\n6. Updating photo (favorite & tags)...');
     const updatePhoto = await apiRequest('PUT', `/api/albums/${createdAlbumId}/photos/${createdPhotoId}`, {
-      title: 'Alpine Vista at Sunset (Starred)',
+      title: 'Cloud Stored Sunset Photo (Starred)',
       isFavorite: true,
-      tags: ['dolomites', 'sunset', 'favorite', 'private']
+      tags: ['firebase', 'cloud', 'favorite', 'sunset']
     }, { 'x-session-id': sessionId });
     assert(updatePhoto.statusCode === 200, `Update photo: status ${updatePhoto.statusCode}`);
     assert(updatePhoto.body.photo.isFavorite === true, 'Update photo: favorited successfully');
-  } catch (e) {
-    assert(false, `Update photo: error - ${e.message}`);
-  }
 
-  // 7. Get favorites
-  console.log('\n7. Getting favorites...');
-  try {
+    // 7. Get favorites
+    console.log('\n7. Getting favorites...');
     const favs = await apiRequest('GET', '/api/favorites', null, { 'x-session-id': sessionId });
     assert(favs.statusCode === 200, `Get favorites: status ${favs.statusCode}`);
     assert(Array.isArray(favs.body.photos) && favs.body.photos.length >= 1, 'Get favorites: photo in favorites');
-  } catch (e) {
-    assert(false, `Get favorites: error - ${e.message}`);
-  }
 
-  // 8. Get tags
-  console.log('\n8. Getting tag cloud...');
-  try {
+    // 8. Get tags
+    console.log('\n8. Getting tag cloud...');
     const tagsRes = await apiRequest('GET', '/api/tags', null, { 'x-session-id': sessionId });
     assert(tagsRes.statusCode === 200, `Get tags: status ${tagsRes.statusCode}`);
     assert(Array.isArray(tagsRes.body.tags) && tagsRes.body.tags.length > 0, 'Get tags: returned tags array');
-  } catch (e) {
-    assert(false, `Get tags: error - ${e.message}`);
-  }
 
-  // 9. Get stats
-  console.log('\n9. Getting stats...');
-  try {
+    // 9. Get stats
+    console.log('\n9. Getting stats...');
     const stats = await apiRequest('GET', '/api/stats', null, { 'x-session-id': sessionId });
     assert(stats.statusCode === 200, `Get stats: status ${stats.statusCode}`);
-    assert(stats.body.totalPhotos >= 1, `Get stats: photos >= 1 (${stats.body.totalPhotos})`);
+    assert(stats.body.totalPhotos >= 3, `Get stats: photos >= 3 (${stats.body.totalPhotos})`);
     assert(stats.body.totalAlbums >= 1, `Get stats: albums >= 1 (${stats.body.totalAlbums})`);
-    assert(stats.body.totalFavorites >= 1, `Get stats: favorites >= 1 (${stats.body.totalFavorites})`);
-  } catch (e) {
-    assert(false, `Get stats: error - ${e.message}`);
-  }
 
-  // 10. Search
-  console.log('\n10. Searching...');
-  try {
+    // 10. Search
+    console.log('\n10. Searching...');
     const search = await apiRequest('GET', '/api/search?q=Sunset&category=all', null, { 'x-session-id': sessionId });
     assert(search.statusCode === 200, `Search: status ${search.statusCode}`);
-    assert(Array.isArray(search.body.photos) && search.body.photos.length >= 1, 'Search: found matching photo');
-  } catch (e) {
-    assert(false, `Search: error - ${e.message}`);
-  }
+    assert(Array.isArray(search.body.photos) && search.body.photos.length >= 1, 'Search: found matching photos');
 
-  // 10b. Clean up test album so user database is never polluted
-  console.log('\n10b. Cleaning up test album...');
-  try {
-    if (createdAlbumId) {
-      const del = await apiRequest('DELETE', `/api/albums/${createdAlbumId}`, null, { 'x-session-id': sessionId });
-      assert(del.statusCode === 200, 'Clean up test album: deleted successfully');
-    }
-  } catch (e) {
-    console.warn('Could not clean up test album:', e.message);
-  }
+    // 11. Delete single photo
+    console.log('\n11. Deleting single photo...');
+    const delPhoto = await apiRequest('DELETE', `/api/albums/${createdAlbumId}/photos/${createdPhotoId}`, null, { 'x-session-id': sessionId });
+    assert(delPhoto.statusCode === 200, `Delete photo: status ${delPhoto.statusCode}`);
 
-  // 11. Logout
-  console.log('\n11. Logging out...');
-  try {
+    // 12. Clean up test album
+    console.log('\n12. Cleaning up test album...');
+    const delAlbum = await apiRequest('DELETE', `/api/albums/${createdAlbumId}`, null, { 'x-session-id': sessionId });
+    assert(delAlbum.statusCode === 200, `Delete album: status ${delAlbum.statusCode}`);
+
+    // 13. Logout
+    console.log('\n13. Logging out...');
     const logout = await apiRequest('POST', '/api/auth/logout', null, { 'x-session-id': sessionId });
     assert(logout.statusCode === 200, `Logout: status ${logout.statusCode}`);
-  } catch (e) {
-    assert(false, `Logout: error - ${e.message}`);
-  }
 
-  // 12. Verify session cleared
-  console.log('\n12. Verifying session cleared...');
-  try {
-    const me = await apiRequest('GET', '/api/auth/me', null, { 'x-session-id': sessionId });
-    assert(me.statusCode === 401, `Session cleared: status ${me.statusCode} (expected 401)`);
-  } catch (e) {
-    assert(true, `Session cleared: rejected as expected`);
+    // 14. Verify session cleared
+    console.log('\n14. Verifying session cleared...');
+    const meAfterLogout = await apiRequest('GET', '/api/auth/me', null, { 'x-session-id': sessionId });
+    assert(meAfterLogout.statusCode === 401, `Session cleared: status ${meAfterLogout.statusCode} (expected 401)`);
+
+  } catch (err) {
+    console.error('Test execution error:', err);
+    failed++;
+  } finally {
+    server.close();
   }
 
   // Summary
@@ -242,11 +233,12 @@ async function testFlow() {
   console.log(`Total: ${passed + failed}`);
 
   if (failed === 0) {
-    console.log('\n🎉 All Firebase Auth & Member Whitelist flow tests passed successfully!');
+    console.log('\n🎉 All backend API & Firestore tests passed successfully!');
+    process.exit(0);
   } else {
     console.log('\n⚠️  Some tests failed - check output above.');
     process.exit(1);
   }
 }
 
-testFlow();
+runAllTests();

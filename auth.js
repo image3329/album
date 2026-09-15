@@ -10,6 +10,7 @@ const THEME_KEY = 'memoryAlbumTheme';
 // - If served on :3000 or on Vercel production, use relative paths ('')
 const API_BASE = (() => {
   if (
+    typeof window !== 'undefined' &&
     (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
     window.location.port !== '3000' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -29,6 +30,7 @@ function setSession(sessionId) {
 
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('memoryAlbumUser');
 }
 
 function getStoredTheme() {
@@ -41,7 +43,16 @@ function setStoredTheme(theme) {
 }
 
 // Apply stored theme on initial evaluation
-document.documentElement.setAttribute('data-theme', getStoredTheme());
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('data-theme', getStoredTheme());
+}
+
+// Explicitly set Firebase Auth persistence to LOCAL
+if (typeof firebase !== 'undefined' && firebase.auth) {
+  try {
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+  } catch {}
+}
 
 function resolveMediaUrl(url) {
   if (!url) return '';
@@ -51,6 +62,29 @@ function resolveMediaUrl(url) {
   return API_BASE ? `${API_BASE}${url}` : url;
 }
 
+/**
+ * Safe JSON parser for fetch responses that avoids JSON syntax error when server returns HTML
+ */
+async function parseResponseSafe(response) {
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+  if (!text) return {};
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { error: text };
+    }
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text };
+  }
+}
+
 async function apiFetch(path, options = {}) {
   const sessionId = getSessionId();
   const headers = {
@@ -58,6 +92,16 @@ async function apiFetch(path, options = {}) {
     ...(sessionId ? { 'x-session-id': sessionId } : {}),
     ...(options.headers || {})
   };
+
+  // Attach Firebase ID token if available
+  if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+    try {
+      const idToken = await firebase.auth().currentUser.getIdToken();
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+    } catch {}
+  }
 
   const targetUrl = (path.startsWith('http://') || path.startsWith('https://'))
     ? path
@@ -76,30 +120,36 @@ async function apiFetch(path, options = {}) {
 
 async function getMe() {
   const sessionId = getSessionId();
-  if (!sessionId) return null;
 
-  // 1. Try server verification
-  try {
-    const response = await apiFetch('/api/auth/me');
-    if (response.ok) {
-      const data = await response.json();
-      const user = data.user || data;
+  // 1. Try server verification first
+  if (sessionId) {
+    try {
+      const response = await apiFetch('/api/auth/me');
+      if (response.ok) {
+        const data = await parseResponseSafe(response);
+        const user = data.user || data;
 
-      // Verify member whitelist
-      if (window.FirebaseConfig && user && user.email) {
-        if (!window.FirebaseConfig.isMemberAllowed(user.email)) {
-          await logoutUser();
-          return null;
+        // Verify member whitelist
+        if (window.FirebaseConfig && user && user.email) {
+          if (!window.FirebaseConfig.isMemberAllowed(user.email)) {
+            await logoutUser();
+            return null;
+          }
         }
+        localStorage.setItem('memoryAlbumUser', JSON.stringify(user));
+        return user;
+      } else if (response.status === 401 || response.status === 403) {
+        // Authenticated session explicitly expired or denied
+        clearSession();
+        return null;
       }
-      localStorage.setItem('memoryAlbumUser', JSON.stringify(user));
-      return user;
+      // If 500/502/504 (temporary serverless cold start), do not clear session! Fall through to cached.
+    } catch {
+      // Temporary network error - do not clear session!
     }
-  } catch {
-    // Backend offline or starting up
   }
 
-  // 2. Client cached user fallback
+  // 2. Client cached user fallback (preserves session during offline or momentary serverless hiccups)
   try {
     const cached = localStorage.getItem('memoryAlbumUser');
     if (cached) {
@@ -126,7 +176,7 @@ async function getMe() {
         const userObj = {
           id: fbUser.uid,
           username: fbUser.displayName || fbUser.email.split('@')[0],
-          email: fbUser.email,
+          email: fbUser.email.toLowerCase().trim(),
           theme: getStoredTheme()
         };
         localStorage.setItem('memoryAlbumUser', JSON.stringify(userObj));
@@ -139,7 +189,7 @@ async function getMe() {
 }
 
 /**
- * Sign in user using Firebase Authentication with Whitelist Verification & Server Fallback
+ * Sign in user using Firebase Authentication with Whitelist Verification
  */
 async function loginUser({ email, password }) {
   const cleanEmail = (email || '').trim().toLowerCase();
@@ -151,7 +201,7 @@ async function loginUser({ email, password }) {
     }
   }
 
-  // 2. Try Firebase Auth if configured
+  // 2. Firebase Auth if configured
   if (window.FirebaseConfig && window.FirebaseConfig.isConfigured && typeof firebase !== 'undefined') {
     try {
       const auth = firebase.auth();
@@ -159,7 +209,7 @@ async function loginUser({ email, password }) {
       const firebaseUser = userCredential.user;
       const idToken = await firebaseUser.getIdToken();
 
-      // Sync session with backend
+      // Sync session with backend by verifying ID token
       let backendUser = null;
       try {
         const res = await apiFetch('/api/auth/firebase-login', {
@@ -171,20 +221,16 @@ async function loginUser({ email, password }) {
           })
         });
 
-        const text = await res.text();
-        let data = null;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.warn('Backend returned non-JSON response:', res.status);
-        }
+        const data = await parseResponseSafe(res);
 
         if (res.ok && data && data.sessionId) {
           setSession(data.sessionId);
           backendUser = data.user;
           localStorage.setItem('memoryAlbumUser', JSON.stringify(backendUser));
         } else if (data && data.error) {
-          throw new Error(data.error);
+          if (res.status === 403) {
+            throw new Error(data.error);
+          }
         }
       } catch (syncErr) {
         if (syncErr.message && syncErr.message.includes('Access restricted')) {
@@ -208,23 +254,21 @@ async function loginUser({ email, password }) {
       localStorage.setItem('memoryAlbumUser', JSON.stringify(clientUser));
       return clientUser;
     } catch (fbErr) {
-      console.warn('Firebase Auth note, attempting local server login:', fbErr.message || fbErr.code);
+      console.warn('Firebase Auth note:', fbErr.message || fbErr.code);
 
-      // Attempt local server verification fallback for whitelisted user
+      // Attempt local server verification fallback for testing
       try {
         const fallbackRes = await apiFetch('/api/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email: cleanEmail, password })
         });
-        const fallbackData = await fallbackRes.json();
+        const fallbackData = await parseResponseSafe(fallbackRes);
         if (fallbackRes.ok && fallbackData.sessionId) {
           setSession(fallbackData.sessionId);
           localStorage.setItem('memoryAlbumUser', JSON.stringify(fallbackData.user));
           return fallbackData.user;
         }
-      } catch {
-        // Fall through to standard error reporting
-      }
+      } catch {}
 
       if (
         fbErr.code === 'auth/user-not-found' ||
@@ -240,14 +284,15 @@ async function loginUser({ email, password }) {
     }
   }
 
-  // 3. Fallback Mode (For local development/testing before live Firebase credentials are set)
+  // 3. Fallback Mode (For local development/testing)
   const response = await apiFetch('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email: cleanEmail, password })
   });
-  const data = await response.json();
+  const data = await parseResponseSafe(response);
   if (!response.ok) throw new Error(data.error || 'Login failed. Please check your credentials.');
   setSession(data.sessionId);
+  localStorage.setItem('memoryAlbumUser', JSON.stringify(data.user));
   return data.user;
 }
 
@@ -283,6 +328,7 @@ window.MemoryAlbumAuth = {
   getStoredTheme,
   setStoredTheme,
   apiFetch,
+  parseResponseSafe,
   getMe,
   loginUser,
   logoutUser

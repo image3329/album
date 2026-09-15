@@ -1,13 +1,18 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api"
     },
     {
-      "source": "/uploads/(.*)",
-      "destination": "/api"
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
   ]
 }

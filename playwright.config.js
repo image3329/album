@@ -17,4 +17,10 @@ module.exports = {
       ],
     },
   },
+  webServer: {
+    command: 'node server.js',
+    port: 3000,
+    reuseExistingServer: true,
+    timeout: 15000,
+  },
 };

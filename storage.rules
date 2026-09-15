@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper: Verify if user is signed in with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    // Helper: Check if authenticated user's email is on the authorized whitelist
+    function isAuthorizedMember() {
+      return isAuthenticated() && (
+        request.auth.token.email.lower() in [
+          'image@gmail.com',
+          'sahimage691@gmail.com',
+          'supriya123@gmail.com',
+          'niharika@gmail.com',
+          'rijangurung@gmail.com'
+        ]
+      );
+    }
+
+    // Helper: Verify image format and maximum size (20MB)
+    function isValidImage() {
+      return request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Direct user album uploads: /users/{userId}/albums/{albumId}/{fileName}
+    match /users/{userId}/albums/{albumId}/{fileName} {
+      allow read: if isAuthorizedMember();
+      allow write: if isAuthorizedMember() && isValidImage();
+      allow delete: if isAuthorizedMember();
+    }
+
+    // Migrated and general album photos
+    match /{allPaths=**} {
+      allow read: if isAuthorizedMember();
+      allow write: if isAuthorizedMember() && isValidImage();
+      allow delete: if isAuthorizedMember();
+    }
+  }
+}

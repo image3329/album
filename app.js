@@ -209,7 +209,13 @@ async function initAppPage() {
 
 async function checkAuthAndInit() {
   try {
-    const userData = await window.MemoryAlbumAuth.getMe();
+    let userData = await window.MemoryAlbumAuth.getMe();
+    if (!userData) {
+      // Allow brief pause for Firebase Auth to finish restoring session from IndexedDB
+      await new Promise(r => setTimeout(r, 500));
+      userData = await window.MemoryAlbumAuth.getMe();
+    }
+
     if (!userData) {
       window.location.href = 'index.html';
       return;
@@ -239,7 +245,10 @@ async function checkAuthAndInit() {
     await loadDashboard();
   } catch (error) {
     console.error('Auth verification error:', error);
-    window.location.href = 'index.html';
+    const cached = localStorage.getItem('memoryAlbumUser');
+    if (!cached) {
+      window.location.href = 'index.html';
+    }
   }
 }
 
@@ -1070,10 +1079,13 @@ async function uploadPhotos() {
   }
 
   const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-  const hasFirebaseStorage = Boolean(
+  const isFirebaseLive = Boolean(
     window.FirebaseConfig &&
+    window.FirebaseConfig.isConfigured &&
     typeof window.FirebaseConfig.hasStorage === 'function' &&
-    window.FirebaseConfig.hasStorage()
+    window.FirebaseConfig.hasStorage() &&
+    typeof window.FirebaseConfig.isUserSignedIn === 'function' &&
+    window.FirebaseConfig.isUserSignedIn()
   );
 
   try {
@@ -1087,27 +1099,21 @@ async function uploadPhotos() {
       const file = batchFilesToUpload[0];
       let photoPayload = { title, tags };
 
-      if (hasFirebaseStorage) {
-        try {
-          if (progressText) progressText.textContent = 'Uploading to Cloud Storage...';
-          const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
-            const displayPercent = Math.round(percent * 0.85);
-            if (progressFill) progressFill.style.width = `${displayPercent}%`;
-            if (progressText) progressText.textContent = `Cloud Upload ${displayPercent}%`;
-          }, 6000);
-          photoPayload.imageUrl = uploadRes.url;
-          photoPayload.url = uploadRes.url;
-          photoPayload.filename = uploadRes.filename;
-          photoPayload.sizeBytes = uploadRes.sizeBytes;
-        } catch (storageErr) {
-          console.warn('Firebase Storage upload note, falling back to local server storage:', storageErr.message);
-          if (progressText) progressText.textContent = 'Saving directly to server...';
-          const base64 = await fileToBase64(file);
-          photoPayload.imageBase64 = base64;
-        }
+      if (isFirebaseLive) {
+        if (progressText) progressText.textContent = 'Uploading directly to Cloud Storage...';
+        const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
+          const displayPercent = Math.round(percent * 0.85);
+          if (progressFill) progressFill.style.width = `${displayPercent}%`;
+          if (progressText) progressText.textContent = `Cloud Upload ${displayPercent}%`;
+        });
+        photoPayload.imageUrl = uploadRes.url;
+        photoPayload.url = uploadRes.url;
+        photoPayload.filename = uploadRes.filename;
+        photoPayload.sizeBytes = uploadRes.sizeBytes;
       } else {
+        // Local dev/test mode fallback
         if (progressFill) progressFill.style.width = '50%';
-        if (progressText) progressText.textContent = 'Encoding image...';
+        if (progressText) progressText.textContent = 'Preparing image...';
         const base64 = await fileToBase64(file);
         photoPayload.imageBase64 = base64;
       }
@@ -1120,9 +1126,9 @@ async function uploadPhotos() {
         body: JSON.stringify(photoPayload)
       });
 
+      const resData = await window.MemoryAlbumAuth.parseResponseSafe(res);
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Upload failed');
+        throw new Error(resData.error || 'Upload failed');
       }
     } else {
       // Batch upload
@@ -1136,25 +1142,19 @@ async function uploadPhotos() {
 
         const basePercent = Math.round((i / totalFiles) * 85);
         if (progressFill) progressFill.style.width = `${basePercent}%`;
-        if (progressText) progressText.textContent = `Processing ${i + 1}/${totalFiles}...`;
+        if (progressText) progressText.textContent = `Uploading ${i + 1}/${totalFiles}...`;
 
-        if (hasFirebaseStorage) {
-          try {
-            const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
-              const fileContribution = Math.round((percent / 100) * (85 / totalFiles));
-              const currentTotal = basePercent + fileContribution;
-              if (progressFill) progressFill.style.width = `${currentTotal}%`;
-              if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
-            }, 6000);
-            itemPayload.imageUrl = uploadRes.url;
-            itemPayload.url = uploadRes.url;
-            itemPayload.filename = uploadRes.filename;
-            itemPayload.sizeBytes = uploadRes.sizeBytes;
-          } catch (storageErr) {
-            console.warn(`Cloud upload note for file ${file.name}, using local fallback:`, storageErr.message);
-            const base64 = await fileToBase64(file);
-            itemPayload.imageBase64 = base64;
-          }
+        if (isFirebaseLive) {
+          const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
+            const fileContribution = Math.round((percent / 100) * (85 / totalFiles));
+            const currentTotal = basePercent + fileContribution;
+            if (progressFill) progressFill.style.width = `${currentTotal}%`;
+            if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
+          });
+          itemPayload.imageUrl = uploadRes.url;
+          itemPayload.url = uploadRes.url;
+          itemPayload.filename = uploadRes.filename;
+          itemPayload.sizeBytes = uploadRes.sizeBytes;
         } else {
           const base64 = await fileToBase64(file);
           itemPayload.imageBase64 = base64;
@@ -1171,9 +1171,9 @@ async function uploadPhotos() {
         body: JSON.stringify({ photos: photosPayload })
       });
 
+      const resData = await window.MemoryAlbumAuth.parseResponseSafe(res);
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Batch upload failed');
+        throw new Error(resData.error || 'Batch upload failed');
       }
     }
 

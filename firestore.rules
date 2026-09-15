@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Verify if user is signed in with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    // Helper: Check if authenticated user's email is on the authorized whitelist
+    function isAuthorizedMember() {
+      return isAuthenticated() && (
+        request.auth.token.email.lower() in [
+          'image@gmail.com',
+          'sahimage691@gmail.com',
+          'supriya123@gmail.com',
+          'niharika@gmail.com',
+          'rijangurung@gmail.com'
+        ]
+      );
+    }
+
+    // Users Collection: Only authorized members can access user profiles
+    match /users/{userId} {
+      allow read: if isAuthorizedMember();
+      allow create, update: if isAuthorizedMember();
+      allow delete: if false; // User deletion disabled for security
+    }
+
+    // Albums Collection: Restricted to authorized members only
+    match /albums/{albumId} {
+      allow read: if isAuthorizedMember();
+      allow create: if isAuthorizedMember();
+      allow update: if isAuthorizedMember();
+      allow delete: if isAuthorizedMember();
+    }
+  }
+}

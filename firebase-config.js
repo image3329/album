@@ -39,6 +39,7 @@ const isFirebaseConfigured = Boolean(
 let firebaseApp = null;
 let firebaseAuth = null;
 let firebaseStorage = null;
+let firebaseFirestore = null;
 
 if (typeof firebase !== 'undefined') {
   if (isFirebaseConfigured) {
@@ -49,6 +50,10 @@ if (typeof firebase !== 'undefined') {
       if (typeof firebase.storage === 'function') {
         firebaseStorage = firebase.storage();
         console.log('Firebase Storage initialized successfully.');
+      }
+      if (typeof firebase.firestore === 'function') {
+        firebaseFirestore = firebase.firestore();
+        console.log('Cloud Firestore initialized successfully.');
       }
     } catch (err) {
       console.error('Error initializing Firebase:', err);
@@ -99,25 +104,24 @@ function isFirebaseUserSignedIn() {
 }
 
 /**
- * Upload an image file directly to Firebase Storage with strict timeout and fallback.
- * Returns a permanent HTTPS URL, or throws an error quickly so local fallback occurs.
+ * Upload an image file directly to Firebase Storage with reliable progress and error reporting.
+ * Returns a permanent HTTPS URL.
  * @param {File} file 
  * @param {string} albumId 
  * @param {Function} [onProgress] Callback with percentage 0-100
- * @param {number} [timeoutMs] Max time to wait before aborting to fallback (default 6000ms)
+ * @param {number} [timeoutMs] Max time to wait before aborting (default 60000ms)
  * @returns {Promise<{ url: string, filename: string, sizeBytes: number }>}
  */
-async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 6000) {
+async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 60000) {
   if (!firebaseStorage) {
     throw new Error('Firebase Storage is not initialized');
   }
 
-  await waitForFirebaseAuth(1000);
+  await waitForFirebaseAuth(3000);
   const user = firebaseAuth?.currentUser;
 
-  // If not authenticated in Firebase, reject immediately to allow fast local server upload
   if (!user) {
-    throw new Error('No active Firebase user session: using local server storage fallback');
+    throw new Error('No active Firebase user session. Please sign in again.');
   }
 
   const userPrefix = user.uid || 'member';
@@ -140,12 +144,12 @@ async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 6000) 
   return new Promise((resolve, reject) => {
     let completed = false;
 
-    // Strict timeout guard to prevent UI freeze
+    // Guard against indefinite hang
     const timer = setTimeout(() => {
       if (!completed) {
         completed = true;
         try { uploadTask.cancel(); } catch {}
-        reject(new Error('Firebase Storage upload timed out; switching to local server storage.'));
+        reject(new Error('Firebase Storage upload timed out after 60 seconds. Please check your network connection.'));
       }
     }, timeoutMs);
 
@@ -161,7 +165,7 @@ async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 6000) 
         if (!completed) {
           completed = true;
           clearTimeout(timer);
-          console.warn('Firebase Storage upload error (falling back to server storage):', err.message);
+          console.error('Firebase Storage upload error:', err);
           reject(err);
         }
       },
@@ -196,7 +200,9 @@ if (typeof window !== 'undefined') {
     getApp: () => firebaseApp,
     getAuth: () => firebaseAuth,
     getStorage: () => firebaseStorage,
-    hasStorage: () => Boolean(firebaseStorage && firebaseAuth?.currentUser),
+    getFirestore: () => firebaseFirestore,
+    hasStorage: () => Boolean(firebaseStorage),
+    hasFirestore: () => Boolean(firebaseFirestore),
     uploadFileToStorage
   };
 }
