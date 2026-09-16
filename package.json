@@ -18,7 +18,11 @@
     "@playwright/test": "^1.63.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "firebase-admin": "^14.4.0",
+    "firebase-admin": "^13.10.0",
     "playwright": "^1.63.0"
+  },
+  "overrides": {
+    "jwks-rsa": "3.1.0",
+    "jose": "^4.15.5"
   }
 }
