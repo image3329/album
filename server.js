@@ -622,10 +622,14 @@ app.delete('/api/albums/:id', requireAuth, async (req, res) => {
     const existing = await db.getAlbumById(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Album not found' });
 
-    await db.deleteAlbum(req.params.id);
+    const deleted = await db.deleteAlbum(req.params.id);
+    if (!deleted) {
+      return res.status(500).json({ error: 'Failed to delete album from database' });
+    }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete album' });
+    console.error('Delete album error:', err);
+    res.status(500).json({ error: err.message || 'Failed to delete album' });
   }
 });
 
