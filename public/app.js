@@ -1079,46 +1079,40 @@ async function uploadPhotos() {
   }
 
   const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
-  const isFirebaseLive = Boolean(
-    window.FirebaseConfig &&
-    window.FirebaseConfig.isConfigured &&
-    typeof window.FirebaseConfig.hasStorage === 'function' &&
-    window.FirebaseConfig.hasStorage() &&
-    typeof window.FirebaseConfig.isUserSignedIn === 'function' &&
-    window.FirebaseConfig.isUserSignedIn()
-  );
+
+  const uploadToCloudinary = (window.FirebaseConfig && window.FirebaseConfig.uploadFileToCloudinary) ||
+    (window.FirebaseConfig && window.FirebaseConfig.uploadFileToStorage) ||
+    (typeof uploadFileToCloudinary === 'function' ? uploadFileToCloudinary : null);
+
+  if (!uploadToCloudinary) {
+    showToast('Cloudinary upload service is unavailable. Please refresh the page.', 'error');
+    return;
+  }
 
   try {
     if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...'; }
     if (progressWrapper) progressWrapper.hidden = false;
-    if (progressFill) progressFill.style.width = '15%';
+    if (progressFill) progressFill.style.width = '10%';
     if (progressText) progressText.textContent = 'Preparing upload...';
 
     if (batchFilesToUpload.length === 1) {
-      // Single upload
+      // Single upload directly to Cloudinary
       const file = batchFilesToUpload[0];
       let photoPayload = { title, tags };
 
-      if (isFirebaseLive) {
-        if (progressText) progressText.textContent = 'Uploading directly to Cloud Storage...';
-        const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
-          const displayPercent = Math.round(percent * 0.85);
-          if (progressFill) progressFill.style.width = `${displayPercent}%`;
-          if (progressText) progressText.textContent = `Cloud Upload ${displayPercent}%`;
-        });
-        photoPayload.imageUrl = uploadRes.url;
-        photoPayload.url = uploadRes.url;
-        photoPayload.filename = uploadRes.filename;
-        photoPayload.sizeBytes = uploadRes.sizeBytes;
-      } else {
-        // Local dev/test mode fallback
-        if (progressFill) progressFill.style.width = '50%';
-        if (progressText) progressText.textContent = 'Preparing image...';
-        const base64 = await fileToBase64(file);
-        photoPayload.imageBase64 = base64;
-      }
+      if (progressText) progressText.textContent = 'Uploading to Cloudinary...';
+      const uploadRes = await uploadToCloudinary(file, albumId, percent => {
+        const displayPercent = Math.min(90, Math.round(percent * 0.9));
+        if (progressFill) progressFill.style.width = `${displayPercent}%`;
+        if (progressText) progressText.textContent = `Uploading ${displayPercent}%`;
+      });
 
-      if (progressFill) progressFill.style.width = '90%';
+      photoPayload.imageUrl = uploadRes.url;
+      photoPayload.url = uploadRes.url;
+      photoPayload.filename = uploadRes.filename || file.name || 'image';
+      photoPayload.sizeBytes = uploadRes.sizeBytes || file.size || 0;
+
+      if (progressFill) progressFill.style.width = '92%';
       if (progressText) progressText.textContent = 'Saving photo to album...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos`, {
@@ -1131,7 +1125,7 @@ async function uploadPhotos() {
         throw new Error(resData.error || 'Upload failed');
       }
     } else {
-      // Batch upload
+      // Batch upload directly to Cloudinary
       const photosPayload = [];
       const totalFiles = batchFilesToUpload.length;
 
@@ -1140,30 +1134,26 @@ async function uploadPhotos() {
         const itemTitle = `${title} (${i + 1})`;
         const itemPayload = { title: itemTitle, tags };
 
-        const basePercent = Math.round((i / totalFiles) * 85);
+        const basePercent = Math.round((i / totalFiles) * 90);
         if (progressFill) progressFill.style.width = `${basePercent}%`;
         if (progressText) progressText.textContent = `Uploading ${i + 1}/${totalFiles}...`;
 
-        if (isFirebaseLive) {
-          const uploadRes = await window.FirebaseConfig.uploadFileToStorage(file, albumId, percent => {
-            const fileContribution = Math.round((percent / 100) * (85 / totalFiles));
-            const currentTotal = basePercent + fileContribution;
-            if (progressFill) progressFill.style.width = `${currentTotal}%`;
-            if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
-          });
-          itemPayload.imageUrl = uploadRes.url;
-          itemPayload.url = uploadRes.url;
-          itemPayload.filename = uploadRes.filename;
-          itemPayload.sizeBytes = uploadRes.sizeBytes;
-        } else {
-          const base64 = await fileToBase64(file);
-          itemPayload.imageBase64 = base64;
-        }
+        const uploadRes = await uploadToCloudinary(file, albumId, percent => {
+          const fileContribution = Math.round((percent / 100) * (90 / totalFiles));
+          const currentTotal = Math.min(90, basePercent + fileContribution);
+          if (progressFill) progressFill.style.width = `${currentTotal}%`;
+          if (progressText) progressText.textContent = `${i + 1}/${totalFiles} (${currentTotal}%)`;
+        });
+
+        itemPayload.imageUrl = uploadRes.url;
+        itemPayload.url = uploadRes.url;
+        itemPayload.filename = uploadRes.filename || file.name || 'image';
+        itemPayload.sizeBytes = uploadRes.sizeBytes || file.size || 0;
 
         photosPayload.push(itemPayload);
       }
 
-      if (progressFill) progressFill.style.width = '92%';
+      if (progressFill) progressFill.style.width = '95%';
       if (progressText) progressText.textContent = 'Saving photos to album...';
 
       const res = await window.MemoryAlbumAuth.apiFetch(`/api/albums/${albumId}/photos/batch`, {
@@ -1190,10 +1180,7 @@ async function uploadPhotos() {
     }
   } catch (err) {
     console.error('Error uploading photos:', err);
-    let msg = err.message || 'Upload failed';
-    if (err.code === 'storage/unauthorized' || msg.includes('unauthorized') || msg.includes('permission-denied')) {
-      msg = 'Firebase Storage permission denied. Please check your storage rules in the Firebase Console.';
-    }
+    const msg = err.message || 'Upload failed';
     showToast(msg, 'error', 5000);
   } finally {
     if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Photo'; }

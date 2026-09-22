@@ -254,7 +254,7 @@ app.get(['/api', '/api/ping'], (req, res) => {
     status: 'ok',
     name: 'Memory Album API',
     database: 'Cloud Firestore',
-    storage: 'Firebase Storage',
+    storage: 'Cloudinary',
     timestamp: new Date().toISOString()
   });
 });
@@ -637,7 +637,7 @@ app.delete('/api/albums/:id', requireAuth, async (req, res) => {
 // PHOTO ROUTES
 // =======================================================
 
-// Upload single photo (Expects Firebase Storage imageUrl or local imageBase64 for local dev)
+// Upload single photo (Expects Cloudinary imageUrl or local imageBase64 for local dev)
 app.post('/api/albums/:id/photos', requireAuth, async (req, res) => {
   try {
     const { imageBase64, imageUrl, url, filename, title, tags, description, sizeBytes } = req.body;
@@ -652,14 +652,14 @@ app.post('/api/albums/:id/photos', requireAuth, async (req, res) => {
     if (!album) return res.status(404).json({ error: 'Album not found' });
 
     let photoUrl = finalUrl;
-    let photoFilename = filename || 'firebase_image';
+    let photoFilename = filename || 'cloudinary_image';
     let photoSize = sizeBytes || 0;
 
     // Fallback for local testing if URL not provided
     if (!photoUrl && imageBase64) {
       if (isVercel) {
         return res.status(400).json({
-          error: 'Local filesystem storage is disabled on Vercel. Please upload directly to Firebase Storage.'
+          error: 'Local filesystem storage is disabled on Vercel. Please upload directly to Cloudinary.'
         });
       }
       const saved = saveBase64Image(imageBase64);
@@ -710,7 +710,7 @@ app.post('/api/albums/:id/photos/batch', requireAuth, async (req, res) => {
 
     for (const item of photos) {
       let photoUrl = item.imageUrl || item.url;
-      let photoFilename = item.filename || 'firebase_image';
+      let photoFilename = item.filename || 'cloudinary_image';
       let photoSize = item.sizeBytes || 0;
 
       if (!photoUrl && item.imageBase64) {

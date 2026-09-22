@@ -16,7 +16,16 @@ const firebaseConfig = {
 };
 
 /**
- * 2. WHITELIST OF AUTHORIZED MEMBERS:
+ * 2. CLOUDINARY CONFIGURATION FOR PHOTO UPLOADS:
+ */
+const CLOUDINARY_CONFIG = {
+  cloudName: 'jovx23un',
+  uploadPreset: 'memory_album_uploads',
+  uploadUrl: 'https://api.cloudinary.com/v1_1/jovx23un/image/upload'
+};
+
+/**
+ * 3. WHITELIST OF AUTHORIZED MEMBERS:
  *    Only users with emails in this list are allowed to access the website.
  *    Anyone else will be automatically denied access and signed out.
  */
@@ -38,7 +47,6 @@ const isFirebaseConfigured = Boolean(
 // Initialize Firebase App if SDK is loaded and credentials are set
 let firebaseApp = null;
 let firebaseAuth = null;
-let firebaseStorage = null;
 let firebaseFirestore = null;
 
 if (typeof firebase !== 'undefined') {
@@ -47,10 +55,6 @@ if (typeof firebase !== 'undefined') {
       firebaseApp = firebase.initializeApp(firebaseConfig);
       firebaseAuth = firebase.auth();
       console.log('Firebase Authentication initialized successfully.');
-      if (typeof firebase.storage === 'function') {
-        firebaseStorage = firebase.storage();
-        console.log('Firebase Storage initialized successfully.');
-      }
       if (typeof firebase.firestore === 'function') {
         firebaseFirestore = firebase.firestore();
         console.log('Cloud Firestore initialized successfully.');
@@ -104,89 +108,84 @@ function isFirebaseUserSignedIn() {
 }
 
 /**
- * Upload an image file directly to Firebase Storage with reliable progress and error reporting.
- * Returns a permanent HTTPS URL.
+ * Upload an image file directly to Cloudinary using unsigned upload preset with real-time progress reporting.
+ * Returns the secure HTTPS URL from Cloudinary.
+ *
  * @param {File} file 
- * @param {string} albumId 
+ * @param {string} [albumId] 
  * @param {Function} [onProgress] Callback with percentage 0-100
- * @param {number} [timeoutMs] Max time to wait before aborting (default 60000ms)
- * @returns {Promise<{ url: string, filename: string, sizeBytes: number }>}
+ * @param {number} [timeoutMs] Max time before aborting (default 60000ms)
+ * @returns {Promise<{ url: string, filename: string, sizeBytes: number, publicId: string }>}
  */
-async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 60000) {
-  if (!firebaseStorage) {
-    throw new Error('Firebase Storage is not initialized');
-  }
-
-  await waitForFirebaseAuth(3000);
-  const user = firebaseAuth?.currentUser;
-
-  if (!user) {
-    throw new Error('No active Firebase user session. Please sign in again.');
-  }
-
-  const userPrefix = user.uid || 'member';
-  const timestamp = Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storagePath = `users/${userPrefix}/albums/${albumId || 'general'}/${timestamp}_${safeName}`;
-  const storageRef = firebaseStorage.ref().child(storagePath);
-
-  const metadata = {
-    contentType: file.type || 'image/jpeg',
-    customMetadata: {
-      originalName: file.name,
-      albumId: albumId || 'general',
-      uploadedAt: new Date().toISOString()
-    }
-  };
-
-  const uploadTask = storageRef.put(file, metadata);
-
+function uploadFileToCloudinary(file, albumId, onProgress, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
-    let completed = false;
+    if (!file) {
+      return reject(new Error('No file provided for upload.'));
+    }
 
-    // Guard against indefinite hang
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+    if (albumId) {
+      formData.append('folder', `albums/${albumId}`);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', CLOUDINARY_CONFIG.uploadUrl, true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && typeof onProgress === 'function' && event.total > 0) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress(percent);
+      }
+    };
+
+    let completed = false;
     const timer = setTimeout(() => {
       if (!completed) {
         completed = true;
-        try { uploadTask.cancel(); } catch {}
-        reject(new Error('Firebase Storage upload timed out after 60 seconds. Please check your network connection.'));
+        try { xhr.abort(); } catch {}
+        reject(new Error('Photo upload timed out after 60 seconds. Please check your network connection.'));
       }
     }, timeoutMs);
 
-    uploadTask.on(
-      'state_changed',
-      snapshot => {
-        if (!completed && typeof onProgress === 'function' && snapshot.totalBytes > 0) {
-          const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          onProgress(percent);
+    xhr.onload = () => {
+      if (completed) return;
+      completed = true;
+      clearTimeout(timer);
+
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && (data.secure_url || data.url)) {
+          resolve({
+            url: data.secure_url || data.url,
+            filename: file.name || data.original_filename || 'image',
+            sizeBytes: data.bytes || file.size || 0,
+            publicId: data.public_id
+          });
+        } else {
+          const errorMsg = data.error?.message || `Upload failed with status ${xhr.status}`;
+          reject(new Error(errorMsg));
         }
-      },
-      err => {
-        if (!completed) {
-          completed = true;
-          clearTimeout(timer);
-          console.error('Firebase Storage upload error:', err);
-          reject(err);
-        }
-      },
-      async () => {
-        if (!completed) {
-          completed = true;
-          clearTimeout(timer);
-          try {
-            const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
-            resolve({
-              url: downloadUrl,
-              filename: safeName,
-              sizeBytes: file.size
-            });
-          } catch (urlErr) {
-            reject(urlErr);
-          }
-        }
+      } catch (err) {
+        reject(new Error(`Invalid response from storage service: ${err.message}`));
       }
-    );
+    };
+
+    xhr.onerror = () => {
+      if (completed) return;
+      completed = true;
+      clearTimeout(timer);
+      reject(new Error('Network error during photo upload. Please check your internet connection.'));
+    };
+
+    xhr.send(formData);
   });
+}
+
+// Alias uploadFileToStorage directly to Cloudinary upload to guarantee no Firebase Storage upload is ever triggered
+async function uploadFileToStorage(file, albumId, onProgress, timeoutMs = 60000) {
+  return uploadFileToCloudinary(file, albumId, onProgress, timeoutMs);
 }
 
 // Expose configuration globally for browser and Node.js
@@ -199,12 +198,13 @@ if (typeof window !== 'undefined') {
     isUserSignedIn: isFirebaseUserSignedIn,
     getApp: () => firebaseApp,
     getAuth: () => firebaseAuth,
-    getStorage: () => firebaseStorage,
     getFirestore: () => firebaseFirestore,
-    hasStorage: () => Boolean(firebaseStorage),
     hasFirestore: () => Boolean(firebaseFirestore),
-    uploadFileToStorage
+    uploadFileToStorage: uploadFileToCloudinary,
+    uploadFileToCloudinary,
+    cloudinaryConfig: CLOUDINARY_CONFIG
   };
+  window.CloudinaryConfig = CLOUDINARY_CONFIG;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -212,6 +212,8 @@ if (typeof module !== 'undefined' && module.exports) {
     firebaseConfig,
     isFirebaseConfigured,
     ALLOWED_MEMBERS,
-    isMemberAllowed
+    isMemberAllowed,
+    CLOUDINARY_CONFIG,
+    uploadFileToCloudinary
   };
 }
